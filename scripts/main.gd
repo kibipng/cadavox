@@ -38,7 +38,7 @@ func open_lobby_list():
 func _on_lobby_created(connect: int, _lobby_id: int):
 	if connect:
 		lobby_id = _lobby_id
-		Steam.setLobbyData(lobby_id,"name",str(SteamManager.STEAM_USERNAME+"'s lobby"))
+		Steam.setLobbyData(lobby_id,"name",str(SteamManager.STEAM_USERNAME+"'s lobby -312-"))
 		Steam.setLobbyJoinable(lobby_id,true)
 		
 		SteamManager.lobby_id = lobby_id
@@ -49,15 +49,24 @@ func _on_lobby_created(connect: int, _lobby_id: int):
 		player_spawner.spawn_host()
 
 func _on_lobby_match_list(lobbies: Array):
+	var i = 0
 	for lobby in lobbies:
 		var lobby_name = Steam.getLobbyData(lobby,"name")
 		var member_count = Steam.getNumLobbyMembers(lobby)
 		var max_players = Steam.getLobbyMemberLimit(lobby)
 		
+		if lobby_name.contains("-312-"):
+			var but := Button.new()
+			but.set_text("{0} | {1}/{2}".format([lobby_name.replace(" -312-",""),member_count,max_players]))
+			but.set_size(Vector2(400,50))
+			but.pressed.connect(join_lobby.bind(lobby))
+			lobbies_list.add_child(but)
+			i+=1
+	
+	if i<=0:
 		var but := Button.new()
-		but.set_text("{0} | {1}/{2}".format([lobby_name,member_count,max_players]))
+		but.set_text("no lobbies found :( (maybe try refreshing?)")
 		but.set_size(Vector2(400,50))
-		but.pressed.connect(join_lobby.bind(lobby))
 		lobbies_list.add_child(but)
 
 func join_lobby(_lobby_id):

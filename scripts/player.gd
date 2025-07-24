@@ -67,8 +67,13 @@ func _ready() -> void:
 			if !(player.seed == -1):
 				seed = player.seed
 		
-		if seed == -1:
-			voxel_terrain.generator.noise.seed = seed
+		if seed != -1:
+			seed(seed)
+		else:
+			randomize()
+			seed = randi()
+		
+		voxel_terrain.generator.noise.seed = seed
 		
 	else:
 		steam_id = multiplayer.multiplayer_peer.get_steam64_from_peer_id(get_multiplayer_authority())
@@ -130,7 +135,8 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("dig"):
 		voxel_tool.mode = VoxelTool.MODE_REMOVE
 		
-		voxel_tool.do_sphere($Head/Camera3D/Marker3D.global_position,2.0)
+		for player in get_tree().get_nodes_in_group("players"):
+			player.voxel_tool.do_sphere($Head/Camera3D/Marker3D.global_position,2.0)
 
 func _headbob(time) -> Vector3:
 	var pos = Vector3.ZERO
