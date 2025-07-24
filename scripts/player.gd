@@ -40,7 +40,8 @@ var t_bob = 0.0
 const BASE_FOV = 75.0 #75
 const FOV_CHANGE = 1.5
 
-
+@export var places_digged : Array[Vector3]= []
+var players_digged : Array[int] = []
 
 
 func _ready() -> void:
@@ -84,14 +85,33 @@ func _ready() -> void:
 	
 	#get rid of mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	
-	
+
+func update_digs():
+	var i = 0
+	var players = get_tree().get_nodes_in_group("players")
+	if players_digged.size()<players.size():
+		for j in players.size()-players_digged.size():
+			places_digged.append(0)
+		
+	for play in players_digged:
+		if players[i].places_digged.size()>play:
+			for j in players[i].places_digged.size()-play:
+				voxel_tool.mode = VoxelTool.MODE_REMOVE
+				voxel_tool.do_sphere(places_digged[j],2.0)
+				print("polaces!!!")
+				players_digged[i]+=1
+		i+=1
 	
 
 func _physics_process(delta: float) -> void:
 	if !is_multiplayer_authority():
 		return
 	
+	if Input.is_action_just_pressed("dig"):
+		voxel_tool.mode = VoxelTool.MODE_REMOVE
+		voxel_tool.do_sphere($Head/Camera3D/Marker3D.global_position,2.0)
+		places_digged.append($Head/Camera3D/Marker3D.global_position)
+	update_digs()
 	# Add the gravity.
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -132,11 +152,6 @@ func _physics_process(delta: float) -> void:
 	
 	move_and_slide()
 	
-	if Input.is_action_just_pressed("dig"):
-		voxel_tool.mode = VoxelTool.MODE_REMOVE
-		
-		for player in get_tree().get_nodes_in_group("players"):
-			player.voxel_tool.do_sphere($Head/Camera3D/Marker3D.global_position,2.0)
 
 func _headbob(time) -> Vector3:
 	var pos = Vector3.ZERO
@@ -219,3 +234,7 @@ func get_sample_rate(is_toggled:bool = true) -> void:
 		current_sample_rate = 48000
 	prox_network.stream.mix_rate = current_sample_rate
 	prox_local.stream.mix_rate = current_sample_rate
+
+
+func _on_multiplayer_synchronizer_synchronized() -> void:
+	print("synbc")

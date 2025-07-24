@@ -23,6 +23,7 @@ func spawn_player(data):
 	return p
 
 func remove_player(data):
+	print("byeee")
 	players[data].queue_free()
 	players.erase(data)
 
