@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://br0q66onus1re"]
+[gd_scene load_steps=13 format=3 uid="uid://br0q66onus1re"]
 
 [ext_resource type="Script" uid="uid://ddl3n5he0vbvn" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="Texture2D" uid="uid://dsqy5bow1lm7i" path="res://textures/4K-abstract_2-diffuse.jpg" id="2_jyhfs"]
@@ -22,15 +22,19 @@ glow_enabled = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jyhfs"]
 albedo_texture = ExtResource("2_jyhfs")
+uv1_scale = Vector3(0.5, 0.5, 0.5)
 uv1_triplanar = true
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_tbgi4"]
+seed = 225
 
 [sub_resource type="VoxelGeneratorNoise2D" id="VoxelGeneratorNoise2D_tefeu"]
 noise = SubResource("FastNoiseLite_tbgi4")
 height_range = 50.0
 
 [sub_resource type="VoxelMesherTransvoxel" id="VoxelMesherTransvoxel_o6xl0"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_jyhfs"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_sugp2")
@@ -92,7 +96,8 @@ material_override = SubResource("StandardMaterial3D_jyhfs")
 generator = SubResource("VoxelGeneratorNoise2D_tefeu")
 mesher = SubResource("VoxelMesherTransvoxel_o6xl0")
 
-[node name="VoxelTerrainMultiplayerSynchronizer" type="VoxelTerrainMultiplayerSynchronizer" parent="Terrain"]
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="Terrain"]
+replication_config = SubResource("SceneReplicationConfig_jyhfs")
 
 [connection signal="pressed" from="MultiplayerUI/VBoxContainer/HBoxContainer/HostBtn" to="." method="_on_host_btn_pressed"]
 [connection signal="pressed" from="MultiplayerUI/VBoxContainer/HBoxContainer/JoinBtn" to="." method="_on_join_btn_pressed"]

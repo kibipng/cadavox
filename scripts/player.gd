@@ -14,7 +14,7 @@ var steam_id : int = 0
 
 @onready var prox_network: AudioStreamPlayer3D = $ProxNetwork
 @onready var prox_local: AudioStreamPlayer3D = $ProxLocal
-
+@export var seed : int = -1
 
 var current_sample_rate: int = 48000
 var has_loopback: bool = false
@@ -44,6 +44,10 @@ const FOV_CHANGE = 1.5
 
 
 func _ready() -> void:
+	
+	voxel_terrain=get_node("/root/Main/Terrain")
+	voxel_tool=voxel_terrain.get_voxel_tool()
+	
 	prox_local.stream.mix_rate=current_sample_rate
 	prox_local.play()
 	local_playback = prox_local.get_stream_playback()
@@ -59,11 +63,13 @@ func _ready() -> void:
 		player_name = SteamManager.STEAM_USERNAME
 		steam_id = SteamManager.STEAM_ID
 		
-		var voxel_view = VOXEL_VIEWER.instantiate()
-		voxel_view.requires_data_block_notifications = true
-		#voxel_view.requires_visuals = false
-		voxel_view.set_network_peer_id(get_multiplayer_authority())
-		add_child(voxel_view)
+		for player in get_tree().get_nodes_in_group("players"):
+			if !(player.seed == -1):
+				seed = player.seed
+		
+		if seed == -1:
+			voxel_terrain.generator.noise.seed = seed
+		
 	else:
 		steam_id = multiplayer.multiplayer_peer.get_steam64_from_peer_id(get_multiplayer_authority())
 		player_name = Steam.getFriendPersonaName(steam_id)
@@ -74,8 +80,6 @@ func _ready() -> void:
 	#get rid of mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	
-	voxel_terrain=get_node("/root/Main/Terrain")
-	voxel_tool=voxel_terrain.get_voxel_tool()
 	
 	
 
