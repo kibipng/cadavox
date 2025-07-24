@@ -2,14 +2,14 @@ extends CharacterBody3D
 
 #voxel
 
-var voxel_terrain : VoxelLodTerrain
+var voxel_terrain : VoxelTerrain
 var voxel_tool : VoxelTool
-
+const VOXEL_VIEWER = preload("res://scenes/voxel_viewer.tscn")
 
 @onready var head = $Head
 @onready var camera_3d : Camera3D = $Head/Camera3D
 @export var player_name : String = "kris deltarune"
-@export var steam_id : int = 0
+var steam_id : int = 0
 @onready var player_name_label: Label3D = $PlayerNameLabel
 
 @onready var prox_network: AudioStreamPlayer3D = $ProxNetwork
@@ -44,9 +44,6 @@ const FOV_CHANGE = 1.5
 
 
 func _ready() -> void:
-	voxel_terrain=get_node("/root/Main/Terrain")
-	voxel_tool=voxel_terrain.get_voxel_tool()
-	
 	prox_local.stream.mix_rate=current_sample_rate
 	prox_local.play()
 	local_playback = prox_local.get_stream_playback()
@@ -69,6 +66,15 @@ func _ready() -> void:
 	
 	#get rid of mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	
+	voxel_terrain=get_node("/root/Main/Terrain")
+	voxel_tool=voxel_terrain.get_voxel_tool()
+	
+	var voxel_view = VOXEL_VIEWER.instantiate()
+	voxel_view.requires_data_block_notifications = true
+	#voxel_view.requires_visuals = false
+	voxel_view.set_network_peer_id(SteamManager.peer.get_peer_id_from_steam64(steam_id))
+	add_child(voxel_view)
 
 func _physics_process(delta: float) -> void:
 	if !is_multiplayer_authority():

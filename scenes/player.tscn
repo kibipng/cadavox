@@ -72,5 +72,3 @@ stream = SubResource("AudioStreamGenerator_g2els")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_3vyb7")
-
-[node name="VoxelViewer" type="VoxelViewer" parent="."]
