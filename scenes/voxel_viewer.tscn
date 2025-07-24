@@ -1,4 +1,3 @@
 [gd_scene format=3 uid="uid://ss5cknwh6vaf"]
 
 [node name="VoxelViewer" type="VoxelViewer"]
-requires_data_block_notifications = true

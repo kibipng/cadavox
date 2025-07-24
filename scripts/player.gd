@@ -58,11 +58,18 @@ func _ready() -> void:
 		camera_3d.set_current(true)
 		player_name = SteamManager.STEAM_USERNAME
 		steam_id = SteamManager.STEAM_ID
+		
+		var voxel_view = VOXEL_VIEWER.instantiate()
+		voxel_view.requires_data_block_notifications = true
+		#voxel_view.requires_visuals = false
+		voxel_view.set_network_peer_id(get_multiplayer_authority())
+		add_child(voxel_view)
 	else:
 		steam_id = multiplayer.multiplayer_peer.get_steam64_from_peer_id(get_multiplayer_authority())
 		player_name = Steam.getFriendPersonaName(steam_id)
 		
 		player_name_label.text = player_name    
+		
 	
 	#get rid of mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -70,11 +77,7 @@ func _ready() -> void:
 	voxel_terrain=get_node("/root/Main/Terrain")
 	voxel_tool=voxel_terrain.get_voxel_tool()
 	
-	var voxel_view = VOXEL_VIEWER.instantiate()
-	voxel_view.requires_data_block_notifications = true
-	#voxel_view.requires_visuals = false
-	voxel_view.set_network_peer_id(SteamManager.peer.get_peer_id_from_steam64(steam_id))
-	add_child(voxel_view)
+	
 
 func _physics_process(delta: float) -> void:
 	if !is_multiplayer_authority():
