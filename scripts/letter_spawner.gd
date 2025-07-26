@@ -18,7 +18,7 @@ func spawn_player(data):
 func kill_letter(letter):
 	print("byeee")
 	if letter and is_instance_valid(letter):
-		letter.safe_free()
+		letter.queue_free()
 
 # Updated to accept rotation parameter for synchronization
 func print_3d(stri: String, loc: Vector3, rotation_y: float = 0.0) -> void:

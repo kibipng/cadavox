@@ -56,18 +56,7 @@ func safe_free():
 	
 	is_being_freed = true
 	
-	# Remove from multiplayer spawning system properly
-	var sync_node = get_node_or_null("MultiplayerSynchronizer")
-	if sync_node:
-		# Remove the sync node first to prevent sync errors
-		sync_node.queue_free()
-	
-	# Stop all physics and interactions
-	set_process_mode(Node.PROCESS_MODE_DISABLED)
-	freeze = true
-	
-	# Use call_deferred to ensure it happens after multiplayer sync is done
-	call_deferred("_final_free")
+	# Simply queue_free with a small delay to let any pending sync finish
+	call_deferred("queue_free")
 
-func _final_free():
-	queue_free()
+# Remove the _final_free function - we don't need it
