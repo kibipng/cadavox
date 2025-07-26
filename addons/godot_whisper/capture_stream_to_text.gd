@@ -72,9 +72,15 @@ func transcribe_thread():
 			#print("no activity")
 			#continue
 		var total_time : float= (resampled.size() as float) / SpeechToText.SPEECH_SETTING_SAMPLE_RATE
+		
+		# FIXED: Properly limit audio_ctx to maximum allowed value
 		var audio_ctx : int = total_time * 1500 / 30 + 128
 		if !use_dynamic_audio_context:
 			audio_ctx = 0
+		else:
+			# Ensure audio_ctx doesn't exceed Whisper's maximum limit
+			audio_ctx = min(audio_ctx, 1500)
+		
 		var tokens := transcribe(resampled, initial_prompt, audio_ctx)
 		if tokens.is_empty():
 			push_warning("No tokens generated")
