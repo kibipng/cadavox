@@ -21,10 +21,11 @@ var main_player
 var terrain_seed: int = -1
 var terrain_seed_set: bool = false
 
-# Word batching variables
+# Optimized word batching variables
 var pending_words: Array = []
 var word_batch_timer: float = 0.0
-var word_batch_interval: float = 0.5  # Batch words every 500ms
+var word_batch_interval: float = 1.0  # Increased to 1 second to reduce packet frequency
+var max_words_per_batch: int = 5      # Limit words per batch to keep packets small
 
 func _ready() -> void:
 	add_to_group("main")  # Add this so SteamManager can find the main scene
@@ -159,7 +160,7 @@ func find_differences_in_sentences(og_sentence: String, new_sentence: String) ->
 	
 	return diff
 
-# Modified spawn_word function to batch words
+# Modified spawn_word function with optimized batching
 func spawn_word(new_text: String):
 	var new_words = find_differences_in_sentences(previous_sentence, remove_punctuation(new_text))
 	
@@ -168,7 +169,7 @@ func spawn_word(new_text: String):
 			var pos = Vector3(randf_range(-20, 20), 50, randf_range(-20, 20))
 			var rotation_y = randf_range(-360, 360)
 			
-			# Add to pending batch instead of sending immediately
+			# Add to pending batch
 			pending_words.append({
 				"word": word,
 				"position": [pos.x, pos.y, pos.z],
@@ -177,21 +178,35 @@ func spawn_word(new_text: String):
 			
 			# Also spawn locally
 			spawn_word_locally(word, pos, rotation_y)
+			
+			# Send immediately if we hit the batch limit (prevents large packets)
+			if pending_words.size() >= max_words_per_batch:
+				send_word_batch()
+				word_batch_timer = 0.0
 
 func send_word_batch():
 	if pending_words.size() == 0:
 		return
 	
-	# Send words in batch
-	var batch_data = {
-		"message": "spawn_word_batch",
-		"words": pending_words,
-		"steam_id": SteamManager.STEAM_ID,
-		"username": SteamManager.STEAM_USERNAME
-	}
-	
-	SteamManager.send_p2p_packet(0, batch_data)
-	pending_words.clear()
+	# Split into smaller batches if needed
+	while pending_words.size() > 0:
+		var batch_size = min(max_words_per_batch, pending_words.size())
+		var current_batch = pending_words.slice(0, batch_size)
+		pending_words = pending_words.slice(batch_size)
+		
+		# Send this batch
+		var batch_data = {
+			"message": "spawn_word_batch",
+			"words": current_batch,
+			"steam_id": SteamManager.STEAM_ID,
+			"username": SteamManager.STEAM_USERNAME
+		}
+		
+		SteamManager.send_p2p_packet(0, batch_data)
+		
+		# Small delay between batches to avoid overwhelming Steam
+		if pending_words.size() > 0:
+			await get_tree().create_timer(0.1).timeout
 
 # Function to spawn words locally on each client with synchronized rotation
 func spawn_word_locally(word: String, pos: Vector3, rotation_y: float):
