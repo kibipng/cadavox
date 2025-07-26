@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://br0q66onus1re"]
+[gd_scene load_steps=28 format=3 uid="uid://br0q66onus1re"]
 
 [ext_resource type="Script" uid="uid://ddl3n5he0vbvn" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="Script" uid="uid://dq3wedb56wb7d" path="res://scripts/letter_spawner.gd" id="2_ya4ey"]
@@ -9,15 +9,16 @@
 [ext_resource type="Shader" uid="uid://8hohipk8ks38" path="res://materials/terrain_depth_material.gdshader" id="6_eb6dy"]
 [ext_resource type="Script" uid="uid://c3bqtfnant3s5" path="res://addons/godot_whisper/capture_stream_to_text.gd" id="6_o6xl0"]
 [ext_resource type="Texture2D" uid="uid://dbo4b8cxs7nro" path="res://textures/Grass002_4K_NormalGL.jpg" id="7_a8y0u"]
-[ext_resource type="Texture2D" uid="uid://bxcix84f0w282" path="res://4K_acoustic_panel_3_basecolor.png" id="8_choun"]
+[ext_resource type="Texture2D" uid="uid://dl3g0dta34mcg" path="res://textures/broken_wall_nor_gl_4k.jpg" id="7_gqmmt"]
 [ext_resource type="Texture2D" uid="uid://2v1fa3t3giej" path="res://textures/Grass002_4K_Color.jpg" id="8_jkv2x"]
 [ext_resource type="AudioStream" uid="uid://dff2hgrxyxq2g" path="res://Conversation Between Two Friends Daily Life Conversation Improve Your English Adrija Biswas.mp3" id="8_tipki"]
+[ext_resource type="Texture2D" uid="uid://bpt0ve2jymjta" path="res://textures/broken_wall_diff_4k.jpg" id="8_yc10j"]
 [ext_resource type="Texture2D" uid="uid://cyfliqcgbsscy" path="res://textures/brown_mud_02_nor_dx_4k.jpg" id="9_dp3eg"]
 [ext_resource type="Texture2D" uid="uid://c47c6jtrjh0c" path="res://textures/coast_sand_rocks_02_nor_dx_4k.jpg" id="9_jbj1t"]
 [ext_resource type="Texture2D" uid="uid://jwlj60bmgykl" path="res://4K_acoustic_panel_3_height.png" id="9_ya4ey"]
 [ext_resource type="Texture2D" uid="uid://c4s1relrfe8hw" path="res://textures/brown_mud_02_diff_4k.jpg" id="10_0ld40"]
-[ext_resource type="Texture2D" uid="uid://cyiw1ymx3r7k8" path="res://4K_acoustic_panel_3_normal.png" id="10_eb6dy"]
 [ext_resource type="Texture2D" uid="uid://1y0qb7hggubl" path="res://textures/coast_sand_rocks_02_diff_4k.jpg" id="10_muem4"]
+[ext_resource type="Texture2D" uid="uid://cciwyoargy4xx" path="res://textures/Sprite-0001.png" id="18_0ld40"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tbgi4"]
 sky_top_color = Color(0.0171649, 2.47332e-05, 0.19702, 1)
@@ -43,18 +44,18 @@ shader = ExtResource("6_eb6dy")
 shader_parameter/surface_texture = ExtResource("8_jkv2x")
 shader_parameter/shallow_texture = ExtResource("10_muem4")
 shader_parameter/medium_texture = ExtResource("10_0ld40")
-shader_parameter/deep_texture = ExtResource("10_0ld40")
+shader_parameter/deep_texture = ExtResource("8_yc10j")
 shader_parameter/surface_normal = ExtResource("7_a8y0u")
 shader_parameter/shallow_normal = ExtResource("9_jbj1t")
 shader_parameter/medium_normal = ExtResource("9_dp3eg")
-shader_parameter/deep_normal = ExtResource("9_dp3eg")
+shader_parameter/deep_normal = ExtResource("7_gqmmt")
 shader_parameter/surface_level = -25.0
 shader_parameter/shallow_level = -35.0
 shader_parameter/medium_level = -45.0
 shader_parameter/deep_level = -60.0
 shader_parameter/blend_distance = 1.23
 shader_parameter/texture_scale = 0.115
-shader_parameter/base_roughness = 0.895
+shader_parameter/base_roughness = 1.0
 shader_parameter/roughness_variation = 0.0
 shader_parameter/debug_mode = false
 
@@ -68,9 +69,9 @@ height_range = 20.0
 [sub_resource type="VoxelMesherTransvoxel" id="VoxelMesherTransvoxel_o6xl0"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trceg"]
-albedo_texture = ExtResource("8_choun")
+transparency = 1
+albedo_texture = ExtResource("18_0ld40")
 normal_enabled = true
-normal_texture = ExtResource("10_eb6dy")
 heightmap_enabled = true
 heightmap_scale = 7.0
 heightmap_texture = ExtResource("9_ya4ey")

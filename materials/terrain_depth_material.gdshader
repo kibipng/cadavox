@@ -145,6 +145,7 @@ void fragment() {
 
     // Material properties
     METALLIC = 0.0;
-    ROUGHNESS = base_roughness + (roughness_variation * (1.0 - surface_weight));
+    ROUGHNESS = 1.0;  // Force maximum roughness
     SPECULAR = 0.0;
+    CLEARCOAT = 0.0;  // Disable clearcoat layer
 }
