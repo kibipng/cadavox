@@ -1,0 +1,22 @@
+[gd_resource type="AudioBusLayout" load_steps=2 format=3 uid="uid://buigpki753058"]
+
+[sub_resource type="AudioEffectCapture" id="AudioEffectCapture_4mdrb"]
+resource_name = "Capture"
+buffer_length = 1.0
+
+[resource]
+bus/0/volume_db = 0.0694828
+bus/1/name = &"Record"
+bus/1/solo = false
+bus/1/mute = false
+bus/1/bypass_fx = false
+bus/1/volume_db = 0.0
+bus/1/send = &"Master"
+bus/1/effect/0/effect = SubResource("AudioEffectCapture_4mdrb")
+bus/1/effect/0/enabled = true
+bus/2/name = &"Friends"
+bus/2/solo = false
+bus/2/mute = false
+bus/2/bypass_fx = false
+bus/2/volume_db = 0.0
+bus/2/send = &"Master"

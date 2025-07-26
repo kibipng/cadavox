@@ -1,9 +1,12 @@
-[gd_scene load_steps=13 format=3 uid="uid://br0q66onus1re"]
+[gd_scene load_steps=18 format=3 uid="uid://br0q66onus1re"]
 
 [ext_resource type="Script" uid="uid://ddl3n5he0vbvn" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="Texture2D" uid="uid://dsqy5bow1lm7i" path="res://textures/4K-abstract_2-diffuse.jpg" id="2_jyhfs"]
 [ext_resource type="Script" uid="uid://cokobf3jt0ekk" path="res://scripts/player_spawner.gd" id="4_jyhfs"]
+[ext_resource type="WhisperResource" uid="uid://cb6p83se860b1" path="res://addons/godot_whisper/models/gglm-tiny.en.bin" id="5_o6xl0"]
 [ext_resource type="PackedScene" uid="uid://pti7ed7ufnvi" path="res://scenes/player.tscn" id="5_tbgi4"]
+[ext_resource type="Script" uid="uid://c3bqtfnant3s5" path="res://addons/godot_whisper/capture_stream_to_text.gd" id="6_o6xl0"]
+[ext_resource type="AudioStream" uid="uid://dff2hgrxyxq2g" path="res://Conversation Between Two Friends Daily Life Conversation Improve Your English Adrija Biswas.mp3" id="8_tipki"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tbgi4"]
 sky_top_color = Color(0.309402, 0.371911, 1, 1)
@@ -35,6 +38,14 @@ height_range = 50.0
 [sub_resource type="VoxelMesherTransvoxel" id="VoxelMesherTransvoxel_o6xl0"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_jyhfs"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tipki"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="TextMesh" id="TextMesh_85g3d"]
+material = SubResource("StandardMaterial3D_tipki")
+text = "What???? "
+font_size = 127
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_sugp2")
@@ -99,5 +110,22 @@ mesher = SubResource("VoxelMesherTransvoxel_o6xl0")
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="Terrain"]
 replication_config = SubResource("SceneReplicationConfig_jyhfs")
 
+[node name="SpeechToText" type="SpeechToText" parent="."]
+language_model = ExtResource("5_o6xl0")
+script = ExtResource("6_o6xl0")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_tipki")
+volume_db = -31.155
+autoplay = true
+bus = &"Record"
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
+mesh = SubResource("TextMesh_85g3d")
+skeleton = NodePath("../..")
+
 [connection signal="pressed" from="MultiplayerUI/VBoxContainer/HBoxContainer/HostBtn" to="." method="_on_host_btn_pressed"]
 [connection signal="pressed" from="MultiplayerUI/VBoxContainer/HBoxContainer/JoinBtn" to="." method="_on_join_btn_pressed"]
+[connection signal="transcribed_msg" from="SpeechToText" to="." method="_on_speech_to_text_transcribed_msg"]

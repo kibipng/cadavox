@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [audio]
 
+buses/default_bus_layout="uid://buigpki753058"
 driver/enable_input=true
 
 [autoload]

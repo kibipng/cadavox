@@ -65,10 +65,12 @@ text = "pre-kris deltarune"
 [node name="ProxNetwork" type="AudioStreamPlayer3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -0.2)
 stream = SubResource("AudioStreamGenerator_3vyb7")
+bus = &"Friends"
 
 [node name="ProxLocal" type="AudioStreamPlayer3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -0.2)
 stream = SubResource("AudioStreamGenerator_g2els")
+bus = &"Record"
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_3vyb7")

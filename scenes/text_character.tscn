@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://chb5s6wu4kq3r"]
+
+[sub_resource type="TextMesh" id="TextMesh_dw23v"]
+resource_local_to_scene = true
+text = "A"
+font_size = 127
+depth = 0.15
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dw23v"]
+size = Vector3(0.85, 0.9, 0.14)
+
+[node name="TextCharacter" type="RigidBody3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("TextMesh_dw23v")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0008789, -0.0359253, 0.000854492)
+shape = SubResource("BoxShape3D_dw23v")

@@ -4,6 +4,8 @@ extends Node3D
 @onready var multiplayer_ui: Control = $MultiplayerUI
 @onready var player_spawner: MultiplayerSpawner = $Players/PlayerSpawner
 
+const TEXT_CHARACTER = preload("res://scenes/text_character.tscn")
+
 var lobby_id = 0
 
 var lobby_created:bool = false
@@ -77,3 +79,37 @@ func join_lobby(_lobby_id):
 
 func hide_menu():
 	multiplayer_ui.hide()
+
+func print_3d(stri: String,loc: Vector3) -> void:
+	var i = 0
+	for chr in stri:
+		var txt = TEXT_CHARACTER.instantiate()
+		add_child(txt)
+		txt.get_node("MeshInstance3D").mesh.text = chr
+		txt.global_position=Vector3(float(i)*0.8,0,0)
+		#txt.global_position.x-=(stri.length()/2.0+(i*(txt.get_node("MeshInstance3D").mesh.font_size)+0.25))
+		i+=1
+		print("what",i)
+
+func find_differences_in_sentences() -> Array[String]:
+	return [] # CHANGE LATER
+
+
+
+func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
+	if !is_partial:
+		#var word = RigidBody3D.new()
+		#var inst = MeshInstance3D.new()
+		#var mesh = TextMesh.new()
+		#var viewer = VoxelViewer.new()
+		##var col = CollisionShape3D.new()
+		##col.shape = mesh
+		#mesh.text = new_text
+		#mesh.font_size = 127
+		#inst.mesh = mesh
+		#inst.create_convex_collision()
+		#word.add_child(inst)
+		#word.add_child(viewer)
+		##word.add_child(col)
+		#add_child(word)
+		print_3d(new_text,Vector3(0,50,0))

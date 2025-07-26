@@ -17,7 +17,7 @@ var steam_id : int = 0
 @export var seed : int = -1
 
 var current_sample_rate: int = 48000
-var has_loopback: bool = false
+var has_loopback: bool = true
 var local_playback: AudioStreamGeneratorPlayback = null
 var local_voice_buffer: PackedByteArray = PackedByteArray()
 var network_playback: AudioStreamGeneratorPlayback = null
@@ -86,21 +86,21 @@ func _ready() -> void:
 	#get rid of mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
-func update_digs():
-	var i = 0
-	var players = get_tree().get_nodes_in_group("players")
-	if players_digged.size()<players.size():
-		for j in players.size()-players_digged.size():
-			places_digged.append(0)
-		
-	for play in players_digged:
-		if players[i].places_digged.size()>play:
-			for j in players[i].places_digged.size()-play:
-				voxel_tool.mode = VoxelTool.MODE_REMOVE
-				voxel_tool.do_sphere(places_digged[j],2.0)
-				print("polaces!!!")
-				players_digged[i]+=1
-		i+=1
+#func update_digs():
+	#var i = 0
+	#var players = get_tree().get_nodes_in_group("players")
+	#if players_digged.size()<players.size():
+		#for j in players.size()-players_digged.size():
+			#places_digged.append(0)
+		#
+	#for play in players_digged:
+		#if players[i].places_digged.size()>play:
+			#for j in players[i].places_digged.size()-play:
+				#voxel_tool.mode = VoxelTool.MODE_REMOVE
+				#voxel_tool.do_sphere(places_digged[j],2.0)
+				#print("polaces!!!")
+				#players_digged[i]+=1
+		#i+=1
 	
 
 func _physics_process(delta: float) -> void:
@@ -110,8 +110,7 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("dig"):
 		voxel_tool.mode = VoxelTool.MODE_REMOVE
 		voxel_tool.do_sphere($Head/Camera3D/Marker3D.global_position,2.0)
-		places_digged.append($Head/Camera3D/Marker3D.global_position)
-	update_digs()
+		#places_digged.append($Head/Camera3D/Marker3D.global_position)
 	# Add the gravity.
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -237,4 +236,5 @@ func get_sample_rate(is_toggled:bool = true) -> void:
 
 
 func _on_multiplayer_synchronizer_synchronized() -> void:
-	print("synbc")
+	#print("synbc")
+	pass

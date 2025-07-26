@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dff2hgrxyxq2g"
+path="res://.godot/imported/Conversation Between Two Friends Daily Life Conversation Improve Your English Adrija Biswas.mp3-2cfb253bd6787b2a44e4561fcc521e31.mp3str"
+
+[deps]
+
+source_file="res://Conversation Between Two Friends Daily Life Conversation Improve Your English Adrija Biswas.mp3"
+dest_files=["res://.godot/imported/Conversation Between Two Friends Daily Life Conversation Improve Your English Adrija Biswas.mp3-2cfb253bd6787b2a44e4561fcc521e31.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
