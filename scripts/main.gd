@@ -17,6 +17,10 @@ var peer = SteamMultiplayerPeer
 var word_bank = []
 var main_player
 
+# Add terrain seed management
+var terrain_seed: int = -1
+var terrain_seed_set: bool = false
+
 func _ready() -> void:
 	add_to_group("main")  # Add this so SteamManager can find the main scene
 	peer = SteamManager.peer
@@ -61,6 +65,12 @@ func _on_lobby_created(connect: int, _lobby_id: int):
 		
 		hide_menu()
 		
+		# Host generates and broadcasts the terrain seed
+		if terrain_seed == -1:
+			randomize()
+			terrain_seed = randi()
+			broadcast_terrain_seed()
+		
 		player_spawner.spawn_host()
 
 func _on_lobby_match_list(lobbies: Array):
@@ -92,6 +102,40 @@ func join_lobby(_lobby_id):
 
 func hide_menu():
 	multiplayer_ui.hide()
+
+# Broadcast terrain seed to all clients
+func broadcast_terrain_seed():
+	var seed_data = {
+		"message": "terrain_seed",
+		"seed": terrain_seed,
+		"steam_id": SteamManager.STEAM_ID,
+		"username": SteamManager.STEAM_USERNAME
+	}
+	SteamManager.send_p2p_packet(0, seed_data)
+
+# Handle received terrain seed
+func handle_terrain_seed(seed_data: Dictionary):
+	if !terrain_seed_set:
+		terrain_seed = seed_data["seed"]
+		apply_terrain_seed()
+		print("Received terrain seed: ", terrain_seed, " from ", seed_data["username"])
+
+# Apply the terrain seed to all players and terrain
+func apply_terrain_seed():
+	if terrain_seed == -1:
+		return
+		
+	terrain_seed_set = true
+	
+	# Apply to terrain
+	var terrain = get_node("Terrain")
+	if terrain:
+		terrain.generator.noise.seed = terrain_seed
+	
+	# Apply to all players
+	for player in get_tree().get_nodes_in_group("players"):
+		if player.has_method("set_terrain_seed"):
+			player.set_terrain_seed(terrain_seed)
 
 func find_differences_in_sentences(og_sentence: String, new_sentence: String) -> Array[String]:
 	var og = og_sentence.split(" ")
@@ -133,13 +177,13 @@ func spawn_word_locally(word: String, pos: Vector3, rotation_y: float):
 		letter_spawner.print_3d(word, pos, rotation_y)
 		word_bank.append(word.to_lower())
 		
-		#if main_player == null:
-			#var players = get_tree().get_nodes_in_group("players")
-			#if players.size() > 0:
-				#main_player = players[0]
+		if main_player == null:
+			var players = get_tree().get_nodes_in_group("players")
+			if players.size() > 0:
+				main_player = players[0]
 		
-		#if main_player != null:
-			#main_player.spawn_text.append([word.to_lower(), pos])
+		if main_player != null:
+			main_player.spawn_text.append([word.to_lower(), pos])
 
 # Function called by SteamManager when word data is received
 func handle_word_spawn(word_data: Dictionary):

@@ -32,7 +32,7 @@ const JUMP_VELOCITY = 9.0 #4.5
 const GRAVITY = 19 #9.8
 const SENSITIVITY = 0.015
 
-#bob varieables
+#bob variables
 const BOB_FREQ = 2.0
 const BOB_AMP = 0.08
 var t_bob = 0.0
@@ -40,6 +40,9 @@ var t_bob = 0.0
 #fov variables
 const BASE_FOV = 75.0 #75
 const FOV_CHANGE = 1.5
+
+@export var spawn_text = [["pp",Vector3(0,0,0)]]
+@export var instanced_alr = ["pp"]
 
 func _ready() -> void:
 	main=get_node("/root/Main/")
@@ -61,30 +64,23 @@ func _ready() -> void:
 		camera_3d.set_current(true)
 		player_name = SteamManager.STEAM_USERNAME
 		steam_id = SteamManager.STEAM_ID
-		main.main_player=self
-		
-		for player in get_tree().get_nodes_in_group("players"):
-			if !(player.seed == -1):
-				seed = player.seed
-		
-		if seed != -1:
-			seed(seed)
-		else:
-			randomize()
-			seed = randi()
-		
-		voxel_terrain.generator.noise.seed = seed
-		
+		main.main_player = self
 	else:
 		steam_id = multiplayer.multiplayer_peer.get_steam64_from_peer_id(get_multiplayer_authority())
 		player_name = Steam.getFriendPersonaName(steam_id)
-		
 		player_name_label.text = player_name    
-		
+	
+	# Seed handling is now done by the main scene via Steam P2P
+	# No need for complex seed synchronization logic here
 	
 	#get rid of mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	
+
+# Method called by main scene to set terrain seed
+func set_terrain_seed(terrain_seed: int):
+	seed = terrain_seed
+	if voxel_terrain:
+		voxel_terrain.generator.noise.seed = terrain_seed
 
 func _physics_process(delta: float) -> void:
 	if !is_multiplayer_authority():
@@ -218,8 +214,3 @@ func get_sample_rate(is_toggled:bool = true) -> void:
 		current_sample_rate = 48000
 	prox_network.stream.mix_rate = current_sample_rate
 	prox_local.stream.mix_rate = current_sample_rate
-
-
-func _on_multiplayer_synchronizer_synchronized() -> void:
-	#print("synbc")
-	pass

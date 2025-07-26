@@ -112,6 +112,24 @@ func read_p2p_msg_packet():
 				"handshake":
 					print("PLAYER: ", readable_data["username"], " has joined!")
 					get_lobby_members()
+					
+					# If we're the host and have a terrain seed, send it to the new player
+					if is_lobby_host:
+						var main_scene = get_tree().get_first_node_in_group("main")
+						if main_scene == null:
+							main_scene = get_node("/root/Main")
+						if main_scene != null and main_scene.terrain_seed != -1:
+							main_scene.broadcast_terrain_seed()
+				
+				"terrain_seed":
+					# Handle terrain seed messages
+					print("Received terrain seed from ", readable_data["username"], ": ", readable_data["seed"])
+					var main_scene = get_tree().get_first_node_in_group("main")
+					if main_scene == null:
+						main_scene = get_node("/root/Main")
+					if main_scene != null:
+						main_scene.handle_terrain_seed(readable_data)
+				
 				"spawn_word":
 					# Handle word spawn messages
 					print("Received word spawn from ", readable_data["username"], ": ", readable_data["word"])
