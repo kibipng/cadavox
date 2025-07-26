@@ -75,7 +75,7 @@ normal_enabled = true
 heightmap_enabled = true
 heightmap_scale = 7.0
 heightmap_texture = ExtResource("9_ya4ey")
-uv1_scale = Vector3(0.25, 0.25, 0.25)
+uv1_scale = Vector3(0.75, 0.75, 0.75)
 uv1_triplanar = true
 uv1_world_triplanar = true
 texture_filter = 0
@@ -155,7 +155,6 @@ script = ExtResource("6_o6xl0")
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("8_tipki")
 volume_db = -31.155
-autoplay = true
 bus = &"Record"
 
 [node name="Walls" type="Node3D" parent="."]
