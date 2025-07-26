@@ -102,8 +102,8 @@ func transcribe_thread():
 		call_deferred("emit_signal", "transcribed_msg", finish_sentence, full_text)
 		last_token_count = tokens.size()
 		#print(text)
-		print(full_text)
-		print("Transcribe " + str(time_processing/ 1000.0) + " s")
+		#print(full_text)
+		#print("Transcribe " + str(time_processing/ 1000.0) + " s")
 		# Sleep remaining time
 		var interval_sleep = transcribe_interval * 1000 - time_processing
 		if interval_sleep > 0:

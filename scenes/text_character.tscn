@@ -1,4 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://chb5s6wu4kq3r"]
+[gd_scene load_steps=4 format=3 uid="uid://chb5s6wu4kq3r"]
+
+[ext_resource type="Script" uid="uid://n0fc3v3mpedj" path="res://scripts/text_character.gd" id="1_fyx1y"]
 
 [sub_resource type="TextMesh" id="TextMesh_dw23v"]
 resource_local_to_scene = true
@@ -10,6 +12,9 @@ depth = 0.15
 size = Vector3(0.85, 0.9, 0.14)
 
 [node name="TextCharacter" type="RigidBody3D"]
+collision_layer = 8
+collision_mask = 31
+script = ExtResource("1_fyx1y")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("TextMesh_dw23v")
@@ -17,3 +22,5 @@ mesh = SubResource("TextMesh_dw23v")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0008789, -0.0359253, 0.000854492)
 shape = SubResource("BoxShape3D_dw23v")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

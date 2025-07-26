@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://br0q66onus1re"]
+[gd_scene load_steps=21 format=3 uid="uid://br0q66onus1re"]
 
 [ext_resource type="Script" uid="uid://ddl3n5he0vbvn" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="Texture2D" uid="uid://dsqy5bow1lm7i" path="res://textures/4K-abstract_2-diffuse.jpg" id="2_jyhfs"]
@@ -6,7 +6,10 @@
 [ext_resource type="WhisperResource" uid="uid://cb6p83se860b1" path="res://addons/godot_whisper/models/gglm-tiny.en.bin" id="5_o6xl0"]
 [ext_resource type="PackedScene" uid="uid://pti7ed7ufnvi" path="res://scenes/player.tscn" id="5_tbgi4"]
 [ext_resource type="Script" uid="uid://c3bqtfnant3s5" path="res://addons/godot_whisper/capture_stream_to_text.gd" id="6_o6xl0"]
+[ext_resource type="Texture2D" uid="uid://bxcix84f0w282" path="res://4K_acoustic_panel_3_basecolor.png" id="8_choun"]
 [ext_resource type="AudioStream" uid="uid://dff2hgrxyxq2g" path="res://Conversation Between Two Friends Daily Life Conversation Improve Your English Adrija Biswas.mp3" id="8_tipki"]
+[ext_resource type="Texture2D" uid="uid://jwlj60bmgykl" path="res://4K_acoustic_panel_3_height.png" id="9_ya4ey"]
+[ext_resource type="Texture2D" uid="uid://cyiw1ymx3r7k8" path="res://4K_acoustic_panel_3_normal.png" id="10_eb6dy"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tbgi4"]
 sky_top_color = Color(0.309402, 0.371911, 1, 1)
@@ -37,8 +40,6 @@ height_range = 50.0
 
 [sub_resource type="VoxelMesherTransvoxel" id="VoxelMesherTransvoxel_o6xl0"]
 
-[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_jyhfs"]
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tipki"]
 albedo_color = Color(1, 0, 0, 1)
 
@@ -46,6 +47,18 @@ albedo_color = Color(1, 0, 0, 1)
 material = SubResource("StandardMaterial3D_tipki")
 text = "What???? "
 font_size = 127
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trceg"]
+albedo_texture = ExtResource("8_choun")
+normal_enabled = true
+normal_texture = ExtResource("10_eb6dy")
+heightmap_enabled = true
+heightmap_scale = 7.0
+heightmap_texture = ExtResource("9_ya4ey")
+uv1_scale = Vector3(0.25, 0.25, 0.25)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_sugp2")
@@ -86,7 +99,7 @@ size_flags_vertical = 3
 [node name="Environment" type="Node" parent="."]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Environment"]
-transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
 shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
@@ -103,12 +116,11 @@ player_scene = ExtResource("5_tbgi4")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.85952, 0)
 
 [node name="Terrain" type="VoxelTerrain" parent="."]
+collision_layer = 16
+collision_mask = 15
 material_override = SubResource("StandardMaterial3D_jyhfs")
 generator = SubResource("VoxelGeneratorNoise2D_tefeu")
 mesher = SubResource("VoxelMesherTransvoxel_o6xl0")
-
-[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="Terrain"]
-replication_config = SubResource("SceneReplicationConfig_jyhfs")
 
 [node name="SpeechToText" type="SpeechToText" parent="."]
 language_model = ExtResource("5_o6xl0")
@@ -125,6 +137,32 @@ bus = &"Record"
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
 mesh = SubResource("TextMesh_85g3d")
 skeleton = NodePath("../..")
+
+[node name="Walls" type="Node3D" parent="."]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -25)
+use_collision = true
+size = Vector3(75, 70, 0.25)
+material = SubResource("StandardMaterial3D_trceg")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 25)
+use_collision = true
+size = Vector3(75, 70, 0.25)
+material = SubResource("StandardMaterial3D_trceg")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -25, 0, 1.09278e-06)
+use_collision = true
+size = Vector3(75, 70, 0.25)
+material = SubResource("StandardMaterial3D_trceg")
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 25, 0, -1.09278e-06)
+use_collision = true
+size = Vector3(75, 70, 0.25)
+material = SubResource("StandardMaterial3D_trceg")
 
 [connection signal="pressed" from="MultiplayerUI/VBoxContainer/HBoxContainer/HostBtn" to="." method="_on_host_btn_pressed"]
 [connection signal="pressed" from="MultiplayerUI/VBoxContainer/HBoxContainer/JoinBtn" to="." method="_on_join_btn_pressed"]

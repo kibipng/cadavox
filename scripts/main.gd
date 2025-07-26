@@ -89,7 +89,7 @@ func print_3d(stri: String,loc: Vector3) -> void:
 		txt.global_position=Vector3(float(i)*0.8,0,0)
 		#txt.global_position.x-=(stri.length()/2.0+(i*(txt.get_node("MeshInstance3D").mesh.font_size)+0.25))
 		i+=1
-		print("what",i)
+		#print("what",i)
 
 func find_differences_in_sentences() -> Array[String]:
 	return [] # CHANGE LATER
