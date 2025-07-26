@@ -6,14 +6,15 @@ var players = {}
 
 func _ready() -> void:
 	spawn_function = spawn_player
-	if is_multiplayer_authority():
-		multiplayer.peer_connected.connect(spawn)
-		multiplayer.peer_disconnected.connect(remove_player)
+	#if is_multiplayer_authority():
+		#multiplayer.peer_connected.connect(spawn)
+		#multiplayer.peer_disconnected.connect(remove_player)
+	#$"../.."
 		#call_deferred("spawn_host")
 
-func spawn_host():
-	if is_multiplayer_authority():
-		spawn(1)
+#func spawn_host():
+	#if is_multiplayer_authority():
+		#spawn(1)
 
 func spawn_player(data):
 	var p = player_scene.instantiate()

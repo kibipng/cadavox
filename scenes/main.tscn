@@ -1,6 +1,7 @@
-[gd_scene load_steps=18 format=3 uid="uid://br0q66onus1re"]
+[gd_scene load_steps=19 format=3 uid="uid://br0q66onus1re"]
 
 [ext_resource type="Script" uid="uid://ddl3n5he0vbvn" path="res://scripts/main.gd" id="1_sugp2"]
+[ext_resource type="Script" uid="uid://dq3wedb56wb7d" path="res://scripts/letter_spawner.gd" id="2_ya4ey"]
 [ext_resource type="Material" uid="uid://bc6jp4np8854j" path="res://materials/grass.tres" id="4_choun"]
 [ext_resource type="Script" uid="uid://cokobf3jt0ekk" path="res://scripts/player_spawner.gd" id="4_jyhfs"]
 [ext_resource type="WhisperResource" uid="uid://cb6p83se860b1" path="res://addons/godot_whisper/models/gglm-tiny.en.bin" id="5_o6xl0"]
@@ -91,6 +92,13 @@ shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
 environment = SubResource("Environment_o6xl0")
+
+[node name="Letters" type="Node" parent="."]
+
+[node name="LetterSpawner" type="MultiplayerSpawner" parent="Letters"]
+_spawnable_scenes = PackedStringArray("")
+spawn_path = NodePath("..")
+script = ExtResource("2_ya4ey")
 
 [node name="Players" type="Node" parent="."]
 

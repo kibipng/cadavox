@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://chb5s6wu4kq3r"]
+[gd_scene load_steps=6 format=3 uid="uid://chb5s6wu4kq3r"]
 
 [ext_resource type="Script" uid="uid://n0fc3v3mpedj" path="res://scripts/text_character.gd" id="1_fyx1y"]
 
@@ -14,6 +14,14 @@ size = Vector3(0.9, 0.9, 0.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fyx1y"]
 size = Vector3(0.95, 0.95, 0.25)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_fyx1y"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 2
 
 [node name="TextCharacter" type="RigidBody3D"]
 script = ExtResource("1_fyx1y")
@@ -35,6 +43,9 @@ transform = Transform3D(1, -1.42109e-14, 1.78814e-07, 1.78814e-07, 1.31134e-07, 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="Area3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0008789, -0.0359253, 0.000854492)
 shape = SubResource("BoxShape3D_fyx1y")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_fyx1y")
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="body_shape_entered" from="." to="." method="_on_body_shape_entered"]
