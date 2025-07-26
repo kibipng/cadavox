@@ -3,6 +3,7 @@ extends Node3D
 @onready var lobbies_list: VBoxContainer = $MultiplayerUI/VBoxContainer/LobbiesScrollContainer/LobbiesList
 @onready var multiplayer_ui: Control = $MultiplayerUI
 @onready var player_spawner: MultiplayerSpawner = $Players/PlayerSpawner
+@onready var letter_spawner: MultiplayerSpawner = $Letters/LetterSpawner
 
 const TEXT_CHARACTER = preload("res://scenes/text_character.tscn")
 
@@ -14,6 +15,8 @@ var lobby_created:bool = false
 
 var peer = SteamMultiplayerPeer
 var word_bank = []
+var main_player
+
 
 func _ready() -> void:
 	peer = SteamManager.peer
@@ -90,20 +93,7 @@ func join_lobby(_lobby_id):
 func hide_menu():
 	multiplayer_ui.hide()
 
-func print_3d(stri: String,loc: Vector3) -> void:
-	var i = 0
-	var new_node = Node3D.new()
-	add_child(new_node)
-	for chr in stri:
-		var txt = TEXT_CHARACTER.instantiate()
-		new_node.add_child(txt)
-		txt.get_node("MeshInstance3D").mesh.text = chr
-		txt.global_position=Vector3(float(i)*0.8,0,0)
-		#txt.global_position.x-=(stri.length()/2.0+(i*(txt.get_node("MeshInstance3D").mesh.font_size)+0.25))
-		i+=1
-		#print("what",i)
-	new_node.global_position = loc
-	new_node.rotation.y = randf_range(-360,360)
+
 
 func find_differences_in_sentences(og_sentence : String, new_sentence : String) -> Array[String]:
 	var og = og_sentence.split(" ")
@@ -120,13 +110,17 @@ func find_differences_in_sentences(og_sentence : String, new_sentence : String) 
 	
 	return diff
 
-
+func spawn_word(new_text:String):
+	for word in find_differences_in_sentences(previous_sentence,remove_punctuation(new_text)):
+		if !word_bank.has(word.to_lower()):
+			var pos = Vector3(randf_range(-20,20),50,randf_range(-20,20))
+			letter_spawner.print_3d(word,pos)
+			word_bank.append(word.to_lower())
+			if main_player==null:
+				main_player=get_tree().get_nodes_in_group("players")[0]
+			main_player.spawn_text.append([word.to_lower(),pos])
 
 func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
 	if !is_partial:
-		var new = remove_punctuation(new_text)
-		for word in find_differences_in_sentences(previous_sentence,new):
-			if !word_bank.has(word.to_lower()):
-				print_3d(word,Vector3(randf_range(-20,20),50,randf_range(-20,20)))
-				word_bank.append(word.to_lower())
-		previous_sentence=new
+		spawn_word(new_text)
+		previous_sentence=remove_punctuation(new_text)

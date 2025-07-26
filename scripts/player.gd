@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 #voxel
 
+var main 
 var voxel_terrain : VoxelTerrain
 var voxel_tool : VoxelTool
 const VOXEL_VIEWER = preload("res://scenes/voxel_viewer.tscn")
@@ -40,11 +41,19 @@ var t_bob = 0.0
 const BASE_FOV = 75.0 #75
 const FOV_CHANGE = 1.5
 
-@export var places_digged : Array[Vector3]= []
-var players_digged : Array[int] = []
+@export var spawn_text = [["pp",Vector3(0,0,0)]]
+@export var instanced_alr = ["pp"]
 
+func search_for_new_text():
+	for player in get_tree().get_nodes_in_group("players"):
+		if player != self:
+			for p in player.spawn_text:
+				if !instanced_alr.has(p[0]):
+					main.letter_spawner.print_3d(p[0],p[1])
+					instanced_alr.append(p[0])
 
 func _ready() -> void:
+	main=get_node("/root/Main/")
 	
 	voxel_terrain=get_node("/root/Main/Terrain")
 	voxel_tool=voxel_terrain.get_voxel_tool()
@@ -63,6 +72,7 @@ func _ready() -> void:
 		camera_3d.set_current(true)
 		player_name = SteamManager.STEAM_USERNAME
 		steam_id = SteamManager.STEAM_ID
+		main.main_player=self
 		
 		for player in get_tree().get_nodes_in_group("players"):
 			if !(player.seed == -1):
@@ -85,27 +95,13 @@ func _ready() -> void:
 	
 	#get rid of mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-
-#func update_digs():
-	#var i = 0
-	#var players = get_tree().get_nodes_in_group("players")
-	#if players_digged.size()<players.size():
-		#for j in players.size()-players_digged.size():
-			#places_digged.append(0)
-		#
-	#for play in players_digged:
-		#if players[i].places_digged.size()>play:
-			#for j in players[i].places_digged.size()-play:
-				#voxel_tool.mode = VoxelTool.MODE_REMOVE
-				#voxel_tool.do_sphere(places_digged[j],2.0)
-				#print("polaces!!!")
-				#players_digged[i]+=1
-		#i+=1
 	
 
 func _physics_process(delta: float) -> void:
 	if !is_multiplayer_authority():
 		return
+	
+	search_for_new_text()
 	
 	if Input.is_action_just_pressed("dig"):
 		voxel_tool.mode = VoxelTool.MODE_REMOVE
