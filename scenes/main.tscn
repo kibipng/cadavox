@@ -1,8 +1,9 @@
-[gd_scene load_steps=21 format=3 uid="uid://br0q66onus1re"]
+[gd_scene load_steps=22 format=3 uid="uid://br0q66onus1re"]
 
 [ext_resource type="Script" uid="uid://ddl3n5he0vbvn" path="res://scripts/main.gd" id="1_sugp2"]
-[ext_resource type="Texture2D" uid="uid://dsqy5bow1lm7i" path="res://textures/4K-abstract_2-diffuse.jpg" id="2_jyhfs"]
 [ext_resource type="Script" uid="uid://cokobf3jt0ekk" path="res://scripts/player_spawner.gd" id="4_jyhfs"]
+[ext_resource type="Texture2D" uid="uid://2v1fa3t3giej" path="res://Grass002_4K_Color.jpg" id="4_ya4ey"]
+[ext_resource type="Texture2D" uid="uid://dbo4b8cxs7nro" path="res://Grass002_4K_NormalGL.jpg" id="5_eb6dy"]
 [ext_resource type="WhisperResource" uid="uid://cb6p83se860b1" path="res://addons/godot_whisper/models/gglm-tiny.en.bin" id="5_o6xl0"]
 [ext_resource type="PackedScene" uid="uid://pti7ed7ufnvi" path="res://scenes/player.tscn" id="5_tbgi4"]
 [ext_resource type="Script" uid="uid://c3bqtfnant3s5" path="res://addons/godot_whisper/capture_stream_to_text.gd" id="6_o6xl0"]
@@ -12,10 +13,10 @@
 [ext_resource type="Texture2D" uid="uid://cyiw1ymx3r7k8" path="res://4K_acoustic_panel_3_normal.png" id="10_eb6dy"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tbgi4"]
-sky_top_color = Color(0.309402, 0.371911, 1, 1)
+sky_top_color = Color(0.624539, 0.703945, 1, 1)
 sky_horizon_color = Color(0.922716, 0.837793, 1.01814, 1)
-ground_bottom_color = Color(0.708081, 0.305882, 0.399167, 1)
-ground_horizon_color = Color(0.922716, 0.837793, 1.01814, 1)
+ground_bottom_color = Color(0.866094, 0.909714, 1, 1)
+ground_horizon_color = Color(0.859479, 0.984212, 1, 1)
 
 [sub_resource type="Sky" id="Sky_tefeu"]
 sky_material = SubResource("ProceduralSkyMaterial_tbgi4")
@@ -27,16 +28,19 @@ tonemap_mode = 2
 glow_enabled = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jyhfs"]
-albedo_texture = ExtResource("2_jyhfs")
-uv1_scale = Vector3(0.5, 0.5, 0.5)
+albedo_texture = ExtResource("4_ya4ey")
+normal_enabled = true
+normal_texture = ExtResource("5_eb6dy")
+uv1_scale = Vector3(0.25, 0.25, 0.25)
 uv1_triplanar = true
+texture_filter = 0
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_tbgi4"]
-seed = 225
 
 [sub_resource type="VoxelGeneratorNoise2D" id="VoxelGeneratorNoise2D_tefeu"]
 noise = SubResource("FastNoiseLite_tbgi4")
-height_range = 50.0
+height_start = -30.0
+height_range = 20.0
 
 [sub_resource type="VoxelMesherTransvoxel" id="VoxelMesherTransvoxel_o6xl0"]
 
@@ -116,8 +120,6 @@ player_scene = ExtResource("5_tbgi4")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.85952, 0)
 
 [node name="Terrain" type="VoxelTerrain" parent="."]
-collision_layer = 16
-collision_mask = 15
 material_override = SubResource("StandardMaterial3D_jyhfs")
 generator = SubResource("VoxelGeneratorNoise2D_tefeu")
 mesher = SubResource("VoxelMesherTransvoxel_o6xl0")

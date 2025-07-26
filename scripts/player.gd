@@ -191,7 +191,8 @@ func _input(event: InputEvent) -> void:
 	if !is_multiplayer_authority():
 		return
 	
-	
+	if Input.is_action_just_pressed("exit_mouse"):
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	
 	if Input.is_action_just_pressed("voice_record"):
 		record_voice(true)

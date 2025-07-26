@@ -8,6 +8,8 @@ const TEXT_CHARACTER = preload("res://scenes/text_character.tscn")
 
 var lobby_id = 0
 
+var previous_sentence:String = ""
+
 var lobby_created:bool = false
 
 var peer = SteamMultiplayerPeer
@@ -82,34 +84,38 @@ func hide_menu():
 
 func print_3d(stri: String,loc: Vector3) -> void:
 	var i = 0
+	var new_node = Node3D.new()
+	add_child(new_node)
 	for chr in stri:
 		var txt = TEXT_CHARACTER.instantiate()
-		add_child(txt)
+		new_node.add_child(txt)
 		txt.get_node("MeshInstance3D").mesh.text = chr
 		txt.global_position=Vector3(float(i)*0.8,0,0)
 		#txt.global_position.x-=(stri.length()/2.0+(i*(txt.get_node("MeshInstance3D").mesh.font_size)+0.25))
 		i+=1
 		#print("what",i)
+	new_node.global_position = loc
+	new_node.rotation.y = randf_range(-360,360)
 
-func find_differences_in_sentences() -> Array[String]:
-	return [] # CHANGE LATER
+func find_differences_in_sentences(og_sentence : String, new_sentence : String) -> Array[String]:
+	var og = og_sentence.split(" ")
+	var new = new_sentence.split(" ")
+	var diff : Array[String] = []
+	
+	for word in new:
+		if !og.has(word):
+			diff.append(word)
+	
+	#var diff_string = ""
+	#for word in diff:
+		#diff_string+=word+" "
+	
+	return diff
 
 
 
 func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
 	if !is_partial:
-		#var word = RigidBody3D.new()
-		#var inst = MeshInstance3D.new()
-		#var mesh = TextMesh.new()
-		#var viewer = VoxelViewer.new()
-		##var col = CollisionShape3D.new()
-		##col.shape = mesh
-		#mesh.text = new_text
-		#mesh.font_size = 127
-		#inst.mesh = mesh
-		#inst.create_convex_collision()
-		#word.add_child(inst)
-		#word.add_child(viewer)
-		##word.add_child(col)
-		#add_child(word)
-		print_3d(new_text,Vector3(0,50,0))
+		for word in find_differences_in_sentences(previous_sentence,new_text):
+			print_3d(word,Vector3(randf_range(-20,20),50,randf_range(-20,20)))
+		previous_sentence=new_text

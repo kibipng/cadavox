@@ -3,20 +3,25 @@ extends RigidBody3D
 
 var broken = false
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	await get_tree().create_timer(7).timeout
+#func _on_body_entered(body: Node) -> void:
+	#
+#
+#
+##func _on_body_shape_entered(body_rid: RID, body: Node, body_shape_index: int, local_shape_index: int) -> void:
+	##
+
+
+func _on_timer_timeout() -> void:
 	self.queue_free()
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
-
-
-func _on_body_entered(body: Node) -> void:
+func _on_area_3d_body_entered(body: Node3D) -> void:
 	if broken:
 		return
 	if body.name == "Terrain":
-		body.get_voxel_tool().do_sphere(global_position,3)
+		var i = body.get_voxel_tool()
+		i.mode = VoxelTool.MODE_REMOVE
+		i.do_sphere(global_position,3)
+		print("poops :DD")
 		broken=true
+		$Timer.start()
