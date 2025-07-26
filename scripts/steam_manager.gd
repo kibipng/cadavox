@@ -2,15 +2,6 @@ extends Node
 
 const PACKET_READ_LIMIT: int = 16
 
-# E 0:01:52:192   Node::get_node: Node not found: "Main/Letters/LetterSpawner/@Node3D@37/@RigidBody3D@43/MultiplayerSynchronizer" (relative to "/root").
-  #<C++ Error>   Method/function failed. Returning: nullptr
-  #<C++ Source>  scene\main\node.cpp:1878 @ Node::get_node()
-#E 0:01:52:192   SceneCacheInterface::process_simplify_path: Parameter "node" is null.
-  #<C++ Source>  modules\multiplayer\scene_cache_interface.cpp:118 @ SceneCacheInterface::process_simplify_path()
-
-
-
-
 
 var STEAM_APP_ID : int = 480
 var STEAM_USERNAME : String = ""

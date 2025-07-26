@@ -2,6 +2,7 @@ extends RigidBody3D
 
 var broken = false
 var spawner_id: int = -1  # Track who spawned this letter
+var is_being_freed = false  # Prevent multiple free calls
 
 @export var grass_mat : StandardMaterial3D
 @export var grassy_dirt_mat : StandardMaterial3D
@@ -14,10 +15,10 @@ func _ready():
 	spawner_id = SteamManager.STEAM_ID
 
 func _on_timer_timeout() -> void:
-	self.queue_free()
+	safe_free()
 
 func _on_area_3d_body_entered(body: Node3D) -> void:
-	if broken:
+	if broken or is_being_freed:
 		return
 	if body.name == "Terrain":
 		# Only the original spawner should handle terrain destruction
@@ -48,3 +49,18 @@ func apply_terrain_destruction(pos: Vector3, radius: float):
 		var voxel_tool = terrain.get_voxel_tool()
 		voxel_tool.mode = VoxelTool.MODE_REMOVE
 		voxel_tool.do_sphere(pos, radius)
+
+func safe_free():
+	if is_being_freed:
+		return
+	
+	is_being_freed = true
+	
+	# Disable the MultiplayerSynchronizer before freeing to prevent sync errors
+	var sync_node = get_node_or_null("MultiplayerSynchronizer")
+	if sync_node:
+		sync_node.set_multiplayer_authority(1)  # Give authority back to server
+		sync_node.enabled = false
+	
+	# Use call_deferred to ensure it happens after the current frame
+	call_deferred("queue_free")
