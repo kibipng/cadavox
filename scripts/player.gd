@@ -86,9 +86,9 @@ func _physics_process(delta: float) -> void:
 	if !is_multiplayer_authority():
 		return
 	
-	if Input.is_action_just_pressed("dig"):
-		voxel_tool.mode = VoxelTool.MODE_REMOVE
-		voxel_tool.do_sphere($Head/Camera3D/Marker3D.global_position,2.0)
+	#if Input.is_action_just_pressed("dig"):
+		#voxel_tool.mode = VoxelTool.MODE_REMOVE
+		#voxel_tool.do_sphere($Head/Camera3D/Marker3D.global_position,2.0)
 		#places_digged.append($Head/Camera3D/Marker3D.global_position)
 	# Add the gravity.
 	if not is_on_floor():
