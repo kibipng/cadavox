@@ -158,6 +158,7 @@ func _headbob(time) -> Vector3:
 	pos.x = cos(time * BOB_FREQ/2) * BOB_AMP
 	return pos
 
+
 func process_voice_data(voice_data:Dictionary, voice_source:String) -> void:
 	get_sample_rate()
 	

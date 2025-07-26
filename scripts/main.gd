@@ -13,6 +13,7 @@ var previous_sentence:String = ""
 var lobby_created:bool = false
 
 var peer = SteamMultiplayerPeer
+var word_bank = []
 
 func _ready() -> void:
 	peer = SteamManager.peer
@@ -27,6 +28,13 @@ func _on_host_btn_pressed() -> void:
 	peer.create_lobby(SteamMultiplayerPeer.LOBBY_TYPE_PUBLIC)
 	multiplayer.multiplayer_peer = peer
 
+func remove_punctuation(text:String) -> String:
+	var  unwanted_chars = [".", ",", ":", ";", "!", "?", "'", "(", ")"]
+	var cleaned_text = ""
+	for char in text:
+		if not char in unwanted_chars:
+			cleaned_text+=char
+	return cleaned_text
 
 func _on_join_btn_pressed() -> void:
 	var lobbies_btns = lobbies_list.get_children()
@@ -116,6 +124,9 @@ func find_differences_in_sentences(og_sentence : String, new_sentence : String) 
 
 func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
 	if !is_partial:
-		for word in find_differences_in_sentences(previous_sentence,new_text):
-			print_3d(word,Vector3(randf_range(-20,20),50,randf_range(-20,20)))
-		previous_sentence=new_text
+		var new = remove_punctuation(new_text)
+		for word in find_differences_in_sentences(previous_sentence,new):
+			if !word_bank.has(word.to_lower()):
+				print_3d(word,Vector3(randf_range(-20,20),50,randf_range(-20,20)))
+				word_bank.append(word.to_lower())
+		previous_sentence=new

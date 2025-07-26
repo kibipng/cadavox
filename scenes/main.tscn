@@ -1,9 +1,8 @@
-[gd_scene load_steps=22 format=3 uid="uid://br0q66onus1re"]
+[gd_scene load_steps=18 format=3 uid="uid://br0q66onus1re"]
 
 [ext_resource type="Script" uid="uid://ddl3n5he0vbvn" path="res://scripts/main.gd" id="1_sugp2"]
+[ext_resource type="Material" uid="uid://bc6jp4np8854j" path="res://materials/grass.tres" id="4_choun"]
 [ext_resource type="Script" uid="uid://cokobf3jt0ekk" path="res://scripts/player_spawner.gd" id="4_jyhfs"]
-[ext_resource type="Texture2D" uid="uid://2v1fa3t3giej" path="res://Grass002_4K_Color.jpg" id="4_ya4ey"]
-[ext_resource type="Texture2D" uid="uid://dbo4b8cxs7nro" path="res://Grass002_4K_NormalGL.jpg" id="5_eb6dy"]
 [ext_resource type="WhisperResource" uid="uid://cb6p83se860b1" path="res://addons/godot_whisper/models/gglm-tiny.en.bin" id="5_o6xl0"]
 [ext_resource type="PackedScene" uid="uid://pti7ed7ufnvi" path="res://scenes/player.tscn" id="5_tbgi4"]
 [ext_resource type="Script" uid="uid://c3bqtfnant3s5" path="res://addons/godot_whisper/capture_stream_to_text.gd" id="6_o6xl0"]
@@ -27,14 +26,6 @@ sky = SubResource("Sky_tefeu")
 tonemap_mode = 2
 glow_enabled = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jyhfs"]
-albedo_texture = ExtResource("4_ya4ey")
-normal_enabled = true
-normal_texture = ExtResource("5_eb6dy")
-uv1_scale = Vector3(0.25, 0.25, 0.25)
-uv1_triplanar = true
-texture_filter = 0
-
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_tbgi4"]
 
 [sub_resource type="VoxelGeneratorNoise2D" id="VoxelGeneratorNoise2D_tefeu"]
@@ -43,14 +34,6 @@ height_start = -30.0
 height_range = 20.0
 
 [sub_resource type="VoxelMesherTransvoxel" id="VoxelMesherTransvoxel_o6xl0"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tipki"]
-albedo_color = Color(1, 0, 0, 1)
-
-[sub_resource type="TextMesh" id="TextMesh_85g3d"]
-material = SubResource("StandardMaterial3D_tipki")
-text = "What???? "
-font_size = 127
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trceg"]
 albedo_texture = ExtResource("8_choun")
@@ -120,9 +103,10 @@ player_scene = ExtResource("5_tbgi4")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.85952, 0)
 
 [node name="Terrain" type="VoxelTerrain" parent="."]
-material_override = SubResource("StandardMaterial3D_jyhfs")
+material_override = ExtResource("4_choun")
 generator = SubResource("VoxelGeneratorNoise2D_tefeu")
 mesher = SubResource("VoxelMesherTransvoxel_o6xl0")
+cast_shadow = 0
 
 [node name="SpeechToText" type="SpeechToText" parent="."]
 language_model = ExtResource("5_o6xl0")
@@ -131,14 +115,7 @@ script = ExtResource("6_o6xl0")
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("8_tipki")
 volume_db = -31.155
-autoplay = true
 bus = &"Record"
-
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
-mesh = SubResource("TextMesh_85g3d")
-skeleton = NodePath("../..")
 
 [node name="Walls" type="Node3D" parent="."]
 

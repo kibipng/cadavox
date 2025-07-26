@@ -3,13 +3,11 @@ extends RigidBody3D
 
 var broken = false
 
-#func _on_body_entered(body: Node) -> void:
-	#
-#
-#
-##func _on_body_shape_entered(body_rid: RID, body: Node, body_shape_index: int, local_shape_index: int) -> void:
-	##
-
+@export var grass_mat : StandardMaterial3D
+@export var grassy_dirt_mat : StandardMaterial3D
+@export var dirt_mat : StandardMaterial3D
+@export var aerial_rocks_mat : StandardMaterial3D
+@export var stone_mat : StandardMaterial3D
 
 func _on_timer_timeout() -> void:
 	self.queue_free()
@@ -22,6 +20,10 @@ func _on_area_3d_body_entered(body: Node3D) -> void:
 		var i = body.get_voxel_tool()
 		i.mode = VoxelTool.MODE_REMOVE
 		i.do_sphere(global_position,3)
-		print("poops :DD")
+		i.mode = VoxelTool.MODE_TEXTURE_PAINT
+		#i.paint
+		
+		
 		broken=true
 		$Timer.start()
+		
