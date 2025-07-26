@@ -123,14 +123,18 @@ func broadcast_terrain_seed():
 		"steam_id": SteamManager.STEAM_ID,
 		"username": SteamManager.STEAM_USERNAME
 	}
+	print("Broadcasting terrain seed: ", terrain_seed)
 	SteamManager.send_p2p_packet(0, seed_data)
 
 # Handle received terrain seed
 func handle_terrain_seed(seed_data: Dictionary):
 	if !terrain_seed_set:
 		terrain_seed = seed_data["seed"]
+		terrain_seed_set = true
 		apply_terrain_seed()
-		print("Received terrain seed: ", terrain_seed, " from ", seed_data["username"])
+		print("Applied terrain seed: ", terrain_seed, " from ", seed_data["username"])
+	else:
+		print("Terrain seed already set, ignoring new seed from ", seed_data.get("username", "Unknown"))
 
 # Apply the terrain seed to all players and terrain
 func apply_terrain_seed():

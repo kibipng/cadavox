@@ -1,6 +1,6 @@
 extends Node
 
-const PACKET_READ_LIMIT: int = 16  # Reduced from 32
+const PACKET_READ_LIMIT: int = 16
 
 var STEAM_APP_ID : int = 480
 var STEAM_USERNAME : String = ""
@@ -12,20 +12,31 @@ var lobby_members : Array
 
 var peer : SteamMultiplayerPeer = SteamMultiplayerPeer.new()
 
-# Very conservative packet management
-var packet_queue: Array = []
-var last_packet_time: float = 0.0
-var packet_interval: float = 0.2  # Increased to 200ms between packets
-var max_packet_size: int = 512    # Much smaller packets
-var packets_sent_this_second: int = 0
-var current_second: int = 0
-var max_packets_per_second: int = 5  # Very conservative limit
-
-# Separate queues with smaller limits
+# Separate rate limiting for different packet types
 var voice_queue: Array = []
 var data_queue: Array = []
+
+# Voice packets - more frequent for real-time audio
+var voice_last_send_time: float = 0.0
+var voice_send_interval: float = 0.05  # 50ms for voice (20 FPS)
 var max_voice_queue_size: int = 3
+
+# Data packets - less frequent for game state
+var data_last_send_time: float = 0.0
+var data_send_interval: float = 0.2   # 200ms for data packets
 var max_data_queue_size: int = 10
+
+# Player movement packets - EXCLUDED from rate limiting
+var movement_packets_this_second: int = 0
+var movement_second_counter: int = 0
+var max_movement_packets_per_second: int = 60  # Allow high frequency for smooth movement
+
+# General packet limiting
+var general_packets_this_second: int = 0
+var general_second_counter: int = 0
+var max_general_packets_per_second: int = 10
+
+var max_packet_size: int = 512
 
 func _init() -> void:
 	OS.set_environment("SteamAppID", str(STEAM_APP_ID))
@@ -42,22 +53,29 @@ func _ready() -> void:
 	Steam.p2p_session_request.connect(_on_p2p_session_request)
 
 func _process(delta: float) -> void:
-	# Reset packet counter every second
-	var current_time_second = int(Time.get_unix_time_from_system())
-	if current_time_second != current_second:
-		current_second = current_time_second
-		packets_sent_this_second = 0
+	var current_time = Time.get_unix_time_from_system()
+	var current_time_second = int(current_time)
 	
-	# Add this to see packet send rate
-	print("Packets sent this second: ", packets_sent_this_second, "/", max_packets_per_second)
+	# Reset counters every second
+	if current_time_second != movement_second_counter:
+		movement_second_counter = current_time_second
+		movement_packets_this_second = 0
+	
+	if current_time_second != general_second_counter:
+		general_second_counter = current_time_second
+		general_packets_this_second = 0
 	
 	if lobby_id > 0:
-		# Very conservative processing - only one type per frame
-		if can_send_packet():
-			if voice_queue.size() > 0:
-				process_voice_queue()
-			elif data_queue.size() > 0:
+		# Process voice packets more frequently
+		if current_time - voice_last_send_time >= voice_send_interval and voice_queue.size() > 0:
+			process_voice_queue()
+			voice_last_send_time = current_time
+		
+		# Process data packets less frequently
+		if current_time - data_last_send_time >= data_send_interval and data_queue.size() > 0:
+			if can_send_general_packet():
 				process_data_queue()
+				data_last_send_time = current_time
 		
 		read_all_p2p_msg_packets()
 		read_all_p2p_voice_packets()
@@ -68,8 +86,8 @@ func _on_lobby_joined(this_lobby_id: int, _permissions: int, _locked: bool, resp
 	if response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS:
 		lobby_id = this_lobby_id
 		get_lobby_members()
-		# Delay handshake to avoid immediate packet spam
-		await get_tree().create_timer(0.5).timeout
+		# Small delay for handshake
+		await get_tree().create_timer(0.1).timeout
 		make_p2p_handshake()
 
 func _on_p2p_session_request(remote_id: int):
@@ -79,17 +97,32 @@ func make_p2p_handshake():
 	send_p2p_packet(0, {"message": "handshake", "steam_id": STEAM_ID, "username": STEAM_USERNAME})
 
 func send_voice_data(voice_data: PackedByteArray):
-	# Skip voice if queue is full to prevent buildup
 	if voice_queue.size() >= max_voice_queue_size:
-		return
+		voice_queue.pop_front()  # Remove oldest instead of skipping
 	
 	queue_voice_packet({"voice_data": voice_data, "steam_id": STEAM_ID, "username": STEAM_USERNAME})
+
+# Special function for movement packets - bypasses general rate limiting
+func send_movement_packet(packet_data: Dictionary) -> bool:
+	if movement_packets_this_second >= max_movement_packets_per_second:
+		return false
+	
+	var this_data: PackedByteArray = var_to_bytes(packet_data)
+	if this_data.size() > max_packet_size:
+		return false
+	
+	var success = send_packet_immediate(this_data, Steam.P2P_SEND_UNRELIABLE_NO_DELAY, 0)
+	if success:
+		movement_packets_this_second += 1
+	return success
+
+func can_send_general_packet() -> bool:
+	return general_packets_this_second < max_general_packets_per_second
 
 func queue_voice_packet(packet_data: Dictionary):
 	var this_data: PackedByteArray = var_to_bytes(packet_data)
 	
 	if this_data.size() > max_packet_size:
-		print("Voice packet too large, skipping")
 		return
 	
 	voice_queue.append({
@@ -100,30 +133,28 @@ func queue_voice_packet(packet_data: Dictionary):
 func process_voice_queue():
 	if voice_queue.size() > 0:
 		var packet = voice_queue.pop_front()
-		send_voice_packet_immediate(packet.data)
+		send_packet_immediate(packet.data, Steam.P2P_SEND_UNRELIABLE_NO_DELAY, 1)
 
 func process_data_queue():
-	var current_time = Time.get_unix_time_from_system()
-	
-	if current_time - last_packet_time >= packet_interval and data_queue.size() > 0:
+	if data_queue.size() > 0:
 		var packet = data_queue.pop_front()
-		send_data_packet_immediate(packet.data)
-		last_packet_time = current_time
-
-func can_send_packet() -> bool:
-	return packets_sent_this_second < max_packets_per_second
+		var success = send_packet_immediate(packet.data, Steam.P2P_SEND_RELIABLE, 0)
+		if success:
+			general_packets_this_second += 1
 
 func send_p2p_packet(this_target: int, packet_data: Dictionary, send_type: int = 0):
 	var this_data: PackedByteArray = var_to_bytes(packet_data)
 	
-	# Much stricter size checking
 	if this_data.size() > max_packet_size:
 		print("Packet too large (", this_data.size(), " bytes), dropping")
 		return false
 	
-	# Drop packets if queue is full
+	# Check if this is a terrain seed packet - send immediately with high priority
+	if packet_data.has("message") and packet_data["message"] == "terrain_seed":
+		return send_packet_immediate(this_data, Steam.P2P_SEND_RELIABLE, 0)
+	
+	# Queue other data packets
 	if data_queue.size() >= max_data_queue_size:
-		print("Data queue full, dropping packet")
 		data_queue.pop_front()  # Remove oldest
 	
 	data_queue.append({
@@ -133,42 +164,18 @@ func send_p2p_packet(this_target: int, packet_data: Dictionary, send_type: int =
 	
 	return true
 
-func send_voice_packet_immediate(packet_data: PackedByteArray) -> bool:
-	if not can_send_packet():
-		return false
-	
-	# Only send to one member at a time to reduce load
-	if lobby_members.size() > 1:
-		for member in lobby_members:
-			if member["steam_id"] != STEAM_ID:
-				var result = Steam.sendP2PPacket(member["steam_id"], packet_data, Steam.P2P_SEND_UNRELIABLE_NO_DELAY, 1)
-				packets_sent_this_second += 1
-				
-				if not is_send_successful(result):
-					print("Voice send failed: ", result)
-				
-				# Only send to first available member to reduce packet spam
-				break
-	
-	return true
-
-func send_data_packet_immediate(packet_data: PackedByteArray) -> bool:
-	if not can_send_packet():
-		return false
-	
+func send_packet_immediate(packet_data: PackedByteArray, send_type: int, channel: int) -> bool:
 	var sent_successfully = false
 	
 	if lobby_members.size() > 1:
 		for member in lobby_members:
 			if member["steam_id"] != STEAM_ID:
-				var result = Steam.sendP2PPacket(member["steam_id"], packet_data, Steam.P2P_SEND_RELIABLE, 0)
+				var result = Steam.sendP2PPacket(member["steam_id"], packet_data, send_type, channel)
 				
 				if is_send_successful(result):
 					sent_successfully = true
 				else:
-					print("Data send failed to ", member["steam_name"], ": ", result)
-				
-		packets_sent_this_second += 1
+					print("Send failed to ", member["steam_name"], ": ", result)
 	
 	return sent_successfully
 
@@ -236,13 +243,21 @@ func read_p2p_msg_packet():
 					print("PLAYER: ", readable_data.get("username", "Unknown"), " joined!")
 					get_lobby_members()
 					
+					# Send terrain seed immediately to new player if we're host
 					if is_lobby_host and main_scene.terrain_seed != -1:
-						# Delay seed broadcast to avoid packet collision
-						await get_tree().create_timer(0.3).timeout
-						main_scene.broadcast_terrain_seed()
+						print("Sending terrain seed to new player: ", readable_data.get("username", "Unknown"))
+						# Send directly to this player
+						var seed_data = {
+							"message": "terrain_seed",
+							"seed": main_scene.terrain_seed,
+							"steam_id": STEAM_ID,
+							"username": STEAM_USERNAME
+						}
+						var seed_packet = var_to_bytes(seed_data)
+						Steam.sendP2PPacket(packet_sender, seed_packet, Steam.P2P_SEND_RELIABLE, 0)
 				
 				"terrain_seed":
-					print("Terrain seed received: ", readable_data.get("seed", "Unknown"))
+					print("Terrain seed received: ", readable_data.get("seed", "Unknown"), " from ", readable_data.get("username", "Unknown"))
 					main_scene.handle_terrain_seed(readable_data)
 				
 				"spawn_word":
