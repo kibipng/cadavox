@@ -133,13 +133,13 @@ func spawn_word_locally(word: String, pos: Vector3, rotation_y: float):
 		letter_spawner.print_3d(word, pos, rotation_y)
 		word_bank.append(word.to_lower())
 		
-		if main_player == null:
-			var players = get_tree().get_nodes_in_group("players")
-			if players.size() > 0:
-				main_player = players[0]
+		#if main_player == null:
+			#var players = get_tree().get_nodes_in_group("players")
+			#if players.size() > 0:
+				#main_player = players[0]
 		
-		if main_player != null:
-			main_player.spawn_text.append([word.to_lower(), pos])
+		#if main_player != null:
+			#main_player.spawn_text.append([word.to_lower(), pos])
 
 # Function called by SteamManager when word data is received
 func handle_word_spawn(word_data: Dictionary):
