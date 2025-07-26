@@ -2,7 +2,6 @@ extends Node
 
 const PACKET_READ_LIMIT: int = 16
 
-
 var STEAM_APP_ID : int = 480
 var STEAM_USERNAME : String = ""
 var STEAM_ID : int = 0

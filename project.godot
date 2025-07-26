@@ -24,6 +24,10 @@ driver/enable_input=true
 
 SteamManager="*res://scripts/steam_manager.gd"
 
+[display]
+
+window/vsync/vsync_mode=0
+
 [input]
 
 voice_record={
