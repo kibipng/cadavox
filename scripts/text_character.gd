@@ -1,12 +1,17 @@
 extends RigidBody3D
 
 var broken = false
+var spawner_id: int = -1  # Track who spawned this letter
 
 @export var grass_mat : StandardMaterial3D
 @export var grassy_dirt_mat : StandardMaterial3D
 @export var dirt_mat : StandardMaterial3D
 @export var aerial_rocks_mat : StandardMaterial3D
 @export var stone_mat : StandardMaterial3D
+
+func _ready():
+	# Set the spawner ID to the current player's Steam ID
+	spawner_id = SteamManager.STEAM_ID
 
 func _on_timer_timeout() -> void:
 	self.queue_free()
@@ -15,9 +20,9 @@ func _on_area_3d_body_entered(body: Node3D) -> void:
 	if broken:
 		return
 	if body.name == "Terrain":
-		# Only the authority (original spawner) should handle terrain destruction
+		# Only the original spawner should handle terrain destruction
 		# to prevent duplicate destruction calls
-		if is_multiplayer_authority():
+		if spawner_id == SteamManager.STEAM_ID:
 			destroy_terrain_at_position(global_position)
 		
 		broken = true
@@ -34,7 +39,7 @@ func destroy_terrain_at_position(pos: Vector3):
 	}
 	SteamManager.send_p2p_packet(0, destruction_data)
 	
-	# Also apply locally
+	# Also apply locally immediately for responsiveness
 	apply_terrain_destruction(pos, 3.0)
 
 func apply_terrain_destruction(pos: Vector3, radius: float):

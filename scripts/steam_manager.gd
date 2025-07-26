@@ -96,15 +96,15 @@ func send_packet_immediate(this_target: int, this_data: PackedByteArray, send_ty
 			for member in lobby_members:
 				if member["steam_id"] != STEAM_ID:
 					var result = Steam.sendP2PPacket(member["steam_id"], this_data, send_type, channel)
-					if result != Steam.RESULT_OK:
+					if (typeof(result) == TYPE_BOOL and not result) or (typeof(result) == TYPE_INT and result != Steam.RESULT_OK):
 						print("Failed to send P2P packet to ", member["steam_name"], " - Result: ", result)
 	elif this_target == 1:
 		if lobby_members.size() > 1:
 			for member in lobby_members:
 				if member["steam_id"] != STEAM_ID:
 					var result = Steam.sendP2PPacket(member["steam_id"], this_data, send_type, 1)
-					if result != Steam.RESULT_OK:
-						print("Failed to send voice packet to ", member["steam_name"], " - Result: ", result)
+					if (typeof(result) == TYPE_BOOL and not result) or (typeof(result) == TYPE_INT and result != Steam.RESULT_OK):
+						print("Failed to send P2P packet to ", member["steam_name"], " - Result: ", result)
 	else:
 		var result = Steam.sendP2PPacket(this_target, this_data, send_type, channel)
 		if result != Steam.RESULT_OK:

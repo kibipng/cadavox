@@ -232,15 +232,20 @@ func handle_terrain_destruction(destruction_data: Dictionary):
 	var pos_array = destruction_data["position"]
 	var pos = Vector3(pos_array[0], pos_array[1], pos_array[2])
 	var radius = destruction_data["radius"]
+	var sender_steam_id = destruction_data["steam_id"]
 	
-	# Apply terrain destruction locally
+	# Only apply if this destruction is from someone else
+	# (the sender already applied it locally)
+	if sender_steam_id != SteamManager.STEAM_ID:
+		apply_terrain_destruction(pos, radius)
+		print("Applied terrain destruction at ", pos, " with radius ", radius, " from ", destruction_data["username"])
+
+func apply_terrain_destruction(pos: Vector3, radius: float):
 	var terrain = get_node("Terrain")
 	if terrain:
 		var voxel_tool = terrain.get_voxel_tool()
 		voxel_tool.mode = VoxelTool.MODE_REMOVE
 		voxel_tool.do_sphere(pos, radius)
-	
-	print("Applied terrain destruction at ", pos, " with radius ", radius, " from ", destruction_data["username"])
 
 func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
 	if !is_partial:
