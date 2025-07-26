@@ -12,6 +12,12 @@ var lobby_members : Array
 
 var peer : SteamMultiplayerPeer = SteamMultiplayerPeer.new()
 
+# Packet optimization variables
+var packet_queue: Array = []
+var last_packet_time: float = 0.0
+var packet_interval: float = 0.1  # Send packets every 100ms max
+var max_packet_size: int = 1200   # Steam's recommended max packet size
+
 func _init() -> void:
 	OS.set_environment("SteamAppID", str(STEAM_APP_ID))
 	OS.set_environment("SteamGameID", str(STEAM_APP_ID))
@@ -29,6 +35,9 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if lobby_id > 0:
+		# Process packet queue first
+		process_packet_queue()
+		
 		read_all_p2p_msg_packets()
 		read_all_p2p_voice_packets()
 	
@@ -50,24 +59,56 @@ func make_p2p_handshake():
 func send_voice_data(voice_data: PackedByteArray):
 	send_p2p_packet(1, {"voice_data": voice_data, "steam_id": STEAM_ID, "username": STEAM_USERNAME})
 
+# Process packet queue with rate limiting
+func process_packet_queue():
+	var current_time = Time.get_unix_time_from_system()
+	
+	if current_time - last_packet_time >= packet_interval and packet_queue.size() > 0:
+		var packet = packet_queue.pop_front()
+		send_packet_immediate(packet.target, packet.data, packet.send_type, packet.channel)
+		last_packet_time = current_time
+
+# Modified send_p2p_packet function with rate limiting
 func send_p2p_packet(this_target: int, packet_data: Dictionary, send_type: int = 0):
 	var channel: int = 0
 	
 	var this_data: PackedByteArray
 	this_data.append_array(var_to_bytes(packet_data))
 	
+	# Check packet size
+	if this_data.size() > max_packet_size:
+		print("Warning: Packet too large (", this_data.size(), " bytes), skipping")
+		return false
+	
+	# Add to queue instead of sending immediately
+	packet_queue.append({
+		"target": this_target,
+		"data": this_data,
+		"send_type": send_type,
+		"channel": channel
+	})
+	
+	return true
+
+func send_packet_immediate(this_target: int, this_data: PackedByteArray, send_type: int, channel: int):
 	if this_target == 0:
 		if lobby_members.size() > 1:
 			for member in lobby_members:
 				if member["steam_id"] != STEAM_ID:
-					Steam.sendP2PPacket(member["steam_id"], this_data, send_type, channel)
+					var result = Steam.sendP2PPacket(member["steam_id"], this_data, send_type, channel)
+					if result != Steam.RESULT_OK:
+						print("Failed to send P2P packet to ", member["steam_name"], " - Result: ", result)
 	elif this_target == 1:
 		if lobby_members.size() > 1:
 			for member in lobby_members:
 				if member["steam_id"] != STEAM_ID:
-					Steam.sendP2PPacket(member["steam_id"], this_data, send_type, 1)
+					var result = Steam.sendP2PPacket(member["steam_id"], this_data, send_type, 1)
+					if result != Steam.RESULT_OK:
+						print("Failed to send voice packet to ", member["steam_name"], " - Result: ", result)
 	else:
-		Steam.sendP2PPacket(this_target, this_data, send_type, channel)
+		var result = Steam.sendP2PPacket(this_target, this_data, send_type, channel)
+		if result != Steam.RESULT_OK:
+			print("Failed to send P2P packet to ", this_target, " - Result: ", result)
 
 func get_lobby_members():
 	lobby_members.clear()
@@ -134,13 +175,17 @@ func read_p2p_msg_packet():
 					if main_scene != null:
 						main_scene.handle_word_spawn(readable_data)
 				
+				"spawn_word_batch":
+					# Handle batched word spawn messages
+					print("Received word batch from ", readable_data["username"], " with ", readable_data["words"].size(), " words")
+					if main_scene != null:
+						main_scene.handle_word_batch_spawn(readable_data)
+				
 				"terrain_destruction":
 					# Handle terrain destruction messages
 					print("Received terrain destruction from ", readable_data["username"], " at position ", readable_data["position"])
 					if main_scene != null:
 						main_scene.handle_terrain_destruction(readable_data)
-
-
 
 func read_p2p_voice_packet():
 	var packet_size: int = Steam.getAvailableP2PPacketSize(1)

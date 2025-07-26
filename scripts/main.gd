@@ -21,12 +21,23 @@ var main_player
 var terrain_seed: int = -1
 var terrain_seed_set: bool = false
 
+# Word batching variables
+var pending_words: Array = []
+var word_batch_timer: float = 0.0
+var word_batch_interval: float = 0.5  # Batch words every 500ms
+
 func _ready() -> void:
 	add_to_group("main")  # Add this so SteamManager can find the main scene
 	peer = SteamManager.peer
 	
 	peer.lobby_created.connect(_on_lobby_created)
 	Steam.lobby_match_list.connect(_on_lobby_match_list)
+
+func _process(delta: float) -> void:
+	word_batch_timer += delta
+	if word_batch_timer >= word_batch_interval and pending_words.size() > 0:
+		send_word_batch()
+		word_batch_timer = 0.0
 
 func _on_host_btn_pressed() -> void:
 	if lobby_created:
@@ -148,28 +159,39 @@ func find_differences_in_sentences(og_sentence: String, new_sentence: String) ->
 	
 	return diff
 
-# Modified to send words via Steam P2P with synchronized rotation
+# Modified spawn_word function to batch words
 func spawn_word(new_text: String):
 	var new_words = find_differences_in_sentences(previous_sentence, remove_punctuation(new_text))
 	
 	for word in new_words:
 		if !word_bank.has(word.to_lower()):
 			var pos = Vector3(randf_range(-20, 20), 50, randf_range(-20, 20))
-			var rotation_y = randf_range(-360, 360)  # Generate rotation once for all clients
+			var rotation_y = randf_range(-360, 360)
 			
-			# Send word data via Steam P2P to all clients
-			var word_data = {
-				"message": "spawn_word",
+			# Add to pending batch instead of sending immediately
+			pending_words.append({
 				"word": word,
 				"position": [pos.x, pos.y, pos.z],
-				"rotation_y": rotation_y,
-				"steam_id": SteamManager.STEAM_ID,
-				"username": SteamManager.STEAM_USERNAME
-			}
-			SteamManager.send_p2p_packet(0, word_data)
+				"rotation_y": rotation_y
+			})
 			
 			# Also spawn locally
 			spawn_word_locally(word, pos, rotation_y)
+
+func send_word_batch():
+	if pending_words.size() == 0:
+		return
+	
+	# Send words in batch
+	var batch_data = {
+		"message": "spawn_word_batch",
+		"words": pending_words,
+		"steam_id": SteamManager.STEAM_ID,
+		"username": SteamManager.STEAM_USERNAME
+	}
+	
+	SteamManager.send_p2p_packet(0, batch_data)
+	pending_words.clear()
 
 # Function to spawn words locally on each client with synchronized rotation
 func spawn_word_locally(word: String, pos: Vector3, rotation_y: float):
@@ -185,6 +207,27 @@ func spawn_word_locally(word: String, pos: Vector3, rotation_y: float):
 		if main_player != null:
 			main_player.spawn_text.append([word.to_lower(), pos])
 
+# Function called by SteamManager when word data is received
+func handle_word_spawn(word_data: Dictionary):
+	var word = word_data["word"]
+	var pos_array = word_data["position"]
+	var pos = Vector3(pos_array[0], pos_array[1], pos_array[2])
+	var rotation_y = word_data["rotation_y"]
+	
+	spawn_word_locally(word, pos, rotation_y)
+
+# Add handler for batched words
+func handle_word_batch_spawn(batch_data: Dictionary):
+	var words = batch_data["words"]
+	for word_info in words:
+		var word = word_info["word"]
+		var pos_array = word_info["position"]
+		var pos = Vector3(pos_array[0], pos_array[1], pos_array[2])
+		var rotation_y = word_info["rotation_y"]
+		
+		spawn_word_locally(word, pos, rotation_y)
+
+# Function called by SteamManager when terrain destruction data is received
 func handle_terrain_destruction(destruction_data: Dictionary):
 	var pos_array = destruction_data["position"]
 	var pos = Vector3(pos_array[0], pos_array[1], pos_array[2])
@@ -198,15 +241,6 @@ func handle_terrain_destruction(destruction_data: Dictionary):
 		voxel_tool.do_sphere(pos, radius)
 	
 	print("Applied terrain destruction at ", pos, " with radius ", radius, " from ", destruction_data["username"])
-
-# Function called by SteamManager when word data is received
-func handle_word_spawn(word_data: Dictionary):
-	var word = word_data["word"]
-	var pos_array = word_data["position"]
-	var pos = Vector3(pos_array[0], pos_array[1], pos_array[2])
-	var rotation_y = word_data["rotation_y"]
-	
-	spawn_word_locally(word, pos, rotation_y)
 
 func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
 	if !is_partial:
