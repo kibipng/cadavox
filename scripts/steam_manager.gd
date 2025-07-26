@@ -108,36 +108,39 @@ func read_p2p_msg_packet():
 		var readable_data: Dictionary = bytes_to_var(packet_code)
 		
 		if readable_data.has("message"):
+			# Get main scene reference once
+			var main_scene = get_tree().get_first_node_in_group("main")
+			if main_scene == null:
+				main_scene = get_node("/root/Main")
+			
 			match readable_data["message"]:
 				"handshake":
 					print("PLAYER: ", readable_data["username"], " has joined!")
 					get_lobby_members()
 					
 					# If we're the host and have a terrain seed, send it to the new player
-					if is_lobby_host:
-						var main_scene = get_tree().get_first_node_in_group("main")
-						if main_scene == null:
-							main_scene = get_node("/root/Main")
-						if main_scene != null and main_scene.terrain_seed != -1:
-							main_scene.broadcast_terrain_seed()
+					if is_lobby_host and main_scene != null and main_scene.terrain_seed != -1:
+						main_scene.broadcast_terrain_seed()
 				
 				"terrain_seed":
 					# Handle terrain seed messages
 					print("Received terrain seed from ", readable_data["username"], ": ", readable_data["seed"])
-					var main_scene = get_tree().get_first_node_in_group("main")
-					if main_scene == null:
-						main_scene = get_node("/root/Main")
 					if main_scene != null:
 						main_scene.handle_terrain_seed(readable_data)
 				
 				"spawn_word":
 					# Handle word spawn messages
 					print("Received word spawn from ", readable_data["username"], ": ", readable_data["word"])
-					var main_scene = get_tree().get_first_node_in_group("main")
-					if main_scene == null:
-						main_scene = get_node("/root/Main")
 					if main_scene != null:
 						main_scene.handle_word_spawn(readable_data)
+				
+				"terrain_destruction":
+					# Handle terrain destruction messages
+					print("Received terrain destruction from ", readable_data["username"], " at position ", readable_data["position"])
+					if main_scene != null:
+						main_scene.handle_terrain_destruction(readable_data)
+
+
 
 func read_p2p_voice_packet():
 	var packet_size: int = Steam.getAvailableP2PPacketSize(1)

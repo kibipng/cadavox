@@ -185,6 +185,20 @@ func spawn_word_locally(word: String, pos: Vector3, rotation_y: float):
 		if main_player != null:
 			main_player.spawn_text.append([word.to_lower(), pos])
 
+func handle_terrain_destruction(destruction_data: Dictionary):
+	var pos_array = destruction_data["position"]
+	var pos = Vector3(pos_array[0], pos_array[1], pos_array[2])
+	var radius = destruction_data["radius"]
+	
+	# Apply terrain destruction locally
+	var terrain = get_node("Terrain")
+	if terrain:
+		var voxel_tool = terrain.get_voxel_tool()
+		voxel_tool.mode = VoxelTool.MODE_REMOVE
+		voxel_tool.do_sphere(pos, radius)
+	
+	print("Applied terrain destruction at ", pos, " with radius ", radius, " from ", destruction_data["username"])
+
 # Function called by SteamManager when word data is received
 func handle_word_spawn(word_data: Dictionary):
 	var word = word_data["word"]
