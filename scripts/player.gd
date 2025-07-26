@@ -41,17 +41,6 @@ var t_bob = 0.0
 const BASE_FOV = 75.0 #75
 const FOV_CHANGE = 1.5
 
-@export var spawn_text = [["pp",Vector3(0,0,0)]]
-@export var instanced_alr = ["pp"]
-
-func search_for_new_text():
-	for player in get_tree().get_nodes_in_group("players"):
-		if player != self:
-			for p in player.spawn_text:
-				if !instanced_alr.has(p[0]):
-					main.letter_spawner.print_3d(p[0],p[1])
-					instanced_alr.append(p[0])
-
 func _ready() -> void:
 	main=get_node("/root/Main/")
 	
@@ -100,8 +89,6 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if !is_multiplayer_authority():
 		return
-	
-	search_for_new_text()
 	
 	if Input.is_action_just_pressed("dig"):
 		voxel_tool.mode = VoxelTool.MODE_REMOVE

@@ -9,16 +9,16 @@ const TEXT_CHARACTER = preload("res://scenes/text_character.tscn")
 
 var lobby_id = 0
 
-var previous_sentence:String = ""
+var previous_sentence: String = ""
 
-var lobby_created:bool = false
+var lobby_created: bool = false
 
 var peer = SteamMultiplayerPeer
 var word_bank = []
 var main_player
 
-
 func _ready() -> void:
+	add_to_group("main")  # Add this so SteamManager can find the main scene
 	peer = SteamManager.peer
 	
 	peer.lobby_created.connect(_on_lobby_created)
@@ -31,12 +31,12 @@ func _on_host_btn_pressed() -> void:
 	peer.create_lobby(SteamMultiplayerPeer.LOBBY_TYPE_PUBLIC)
 	multiplayer.multiplayer_peer = peer
 
-func remove_punctuation(text:String) -> String:
-	var  unwanted_chars = [".", ",", ":", ";", "!", "?", "'", "(", ")"]
+func remove_punctuation(text: String) -> String:
+	var unwanted_chars = [".", ",", ":", ";", "!", "?", "'", "(", ")"]
 	var cleaned_text = ""
 	for char in text:
 		if not char in unwanted_chars:
-			cleaned_text+=char
+			cleaned_text += char
 	return cleaned_text
 
 func _on_join_btn_pressed() -> void:
@@ -53,8 +53,8 @@ func open_lobby_list():
 func _on_lobby_created(connect: int, _lobby_id: int):
 	if connect:
 		lobby_id = _lobby_id
-		Steam.setLobbyData(lobby_id,"name",str(SteamManager.STEAM_USERNAME+"'s lobby -312-"))
-		Steam.setLobbyJoinable(lobby_id,true)
+		Steam.setLobbyData(lobby_id, "name", str(SteamManager.STEAM_USERNAME + "'s lobby -312-"))
+		Steam.setLobbyJoinable(lobby_id, true)
 		
 		SteamManager.lobby_id = lobby_id
 		SteamManager.is_lobby_host = true
@@ -66,22 +66,22 @@ func _on_lobby_created(connect: int, _lobby_id: int):
 func _on_lobby_match_list(lobbies: Array):
 	var i = 0
 	for lobby in lobbies:
-		var lobby_name = Steam.getLobbyData(lobby,"name")
+		var lobby_name = Steam.getLobbyData(lobby, "name")
 		var member_count = Steam.getNumLobbyMembers(lobby)
 		var max_players = Steam.getLobbyMemberLimit(lobby)
 		
 		if lobby_name.contains("-312-"):
 			var but := Button.new()
-			but.set_text("{0} | {1}/{2}".format([lobby_name.replace(" -312-",""),member_count,max_players]))
-			but.set_size(Vector2(400,50))
+			but.set_text("{0} | {1}/{2}".format([lobby_name.replace(" -312-", ""), member_count, max_players]))
+			but.set_size(Vector2(400, 50))
 			but.pressed.connect(join_lobby.bind(lobby))
 			lobbies_list.add_child(but)
-			i+=1
+			i += 1
 	
-	if i<=0:
+	if i <= 0:
 		var but := Button.new()
 		but.set_text("no lobbies found :( (maybe try refreshing?)")
-		but.set_size(Vector2(400,50))
+		but.set_size(Vector2(400, 50))
 		lobbies_list.add_child(but)
 
 func join_lobby(_lobby_id):
@@ -93,34 +93,64 @@ func join_lobby(_lobby_id):
 func hide_menu():
 	multiplayer_ui.hide()
 
-
-
-func find_differences_in_sentences(og_sentence : String, new_sentence : String) -> Array[String]:
+func find_differences_in_sentences(og_sentence: String, new_sentence: String) -> Array[String]:
 	var og = og_sentence.split(" ")
 	var new = new_sentence.split(" ")
-	var diff : Array[String] = []
+	var diff: Array[String] = []
 	
 	for word in new:
 		if !og.has(word):
 			diff.append(word)
 	
-	#var diff_string = ""
-	#for word in diff:
-		#diff_string+=word+" "
-	
 	return diff
 
-func spawn_word(new_text:String):
-	for word in find_differences_in_sentences(previous_sentence,remove_punctuation(new_text)):
+# Modified to send words via Steam P2P with synchronized rotation
+func spawn_word(new_text: String):
+	var new_words = find_differences_in_sentences(previous_sentence, remove_punctuation(new_text))
+	
+	for word in new_words:
 		if !word_bank.has(word.to_lower()):
-			var pos = Vector3(randf_range(-20,20),50,randf_range(-20,20))
-			letter_spawner.print_3d(word,pos)
-			word_bank.append(word.to_lower())
-			if main_player==null:
-				main_player=get_tree().get_nodes_in_group("players")[0]
-			main_player.spawn_text.append([word.to_lower(),pos])
+			var pos = Vector3(randf_range(-20, 20), 50, randf_range(-20, 20))
+			var rotation_y = randf_range(-360, 360)  # Generate rotation once for all clients
+			
+			# Send word data via Steam P2P to all clients
+			var word_data = {
+				"message": "spawn_word",
+				"word": word,
+				"position": [pos.x, pos.y, pos.z],
+				"rotation_y": rotation_y,
+				"steam_id": SteamManager.STEAM_ID,
+				"username": SteamManager.STEAM_USERNAME
+			}
+			SteamManager.send_p2p_packet(0, word_data)
+			
+			# Also spawn locally
+			spawn_word_locally(word, pos, rotation_y)
+
+# Function to spawn words locally on each client with synchronized rotation
+func spawn_word_locally(word: String, pos: Vector3, rotation_y: float):
+	if !word_bank.has(word.to_lower()):
+		letter_spawner.print_3d(word, pos, rotation_y)
+		word_bank.append(word.to_lower())
+		
+		if main_player == null:
+			var players = get_tree().get_nodes_in_group("players")
+			if players.size() > 0:
+				main_player = players[0]
+		
+		if main_player != null:
+			main_player.spawn_text.append([word.to_lower(), pos])
+
+# Function called by SteamManager when word data is received
+func handle_word_spawn(word_data: Dictionary):
+	var word = word_data["word"]
+	var pos_array = word_data["position"]
+	var pos = Vector3(pos_array[0], pos_array[1], pos_array[2])
+	var rotation_y = word_data["rotation_y"]
+	
+	spawn_word_locally(word, pos, rotation_y)
 
 func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
 	if !is_partial:
 		spawn_word(new_text)
-		previous_sentence=remove_punctuation(new_text)
+		previous_sentence = remove_punctuation(new_text)
