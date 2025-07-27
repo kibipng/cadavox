@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://qcuxktfleddl"]
+
+[ext_resource type="Script" uid="uid://mlst374r3pll" path="res://scripts/blue_shell.gd" id="1_eu7ys"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_6ohcp"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_eu7ys"]
+radius = 1.0
+
+[node name="BlueShell" type="RigidBody3D"]
+script = ExtResource("1_eu7ys")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_6ohcp")
+
+[node name="ExplosionArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ExplosionArea"]
+shape = SubResource("SphereShape3D_eu7ys")

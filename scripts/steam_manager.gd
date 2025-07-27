@@ -284,6 +284,33 @@ func read_p2p_msg_packet():
 				"player_stats_sync":
 					if main_scene.has_method("handle_player_stats_sync"):
 						main_scene.handle_player_stats_sync(readable_data)
+				# Chest system messages
+				"chest_spawned":
+					main_scene.handle_chest_spawned(readable_data)
+				
+				"chest_opened":
+					main_scene.handle_chest_opened(readable_data)
+				
+				"mimic_activated":
+					main_scene.handle_mimic_activated(readable_data)
+				
+				# Inventory system messages
+				"inventory_sync":
+					main_scene.handle_inventory_sync(readable_data)
+				
+				"blue_shell_fired":
+					main_scene.handle_blue_shell_fired(readable_data)
+				
+				"blue_shell_exploded":
+					main_scene.handle_blue_shell_exploded(readable_data)
+				
+				# Word gun messages
+				"word_gun_shot":
+					main_scene.handle_word_gun_shot(readable_data)
+				
+				# Subtitle system
+				"player_speech_subtitle":
+					main_scene.handle_player_speech_subtitle(readable_data)
 
 func read_p2p_voice_packet():
 	var packet_size: int = Steam.getAvailableP2PPacketSize(1)
