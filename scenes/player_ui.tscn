@@ -1,0 +1,67 @@
+[gd_scene load_steps=3 format=3 uid="uid://blwkjk5h8di37"]
+
+[ext_resource type="Texture2D" uid="uid://dj132rju2lxfx" path="res://29a3817827bc4616d12b6db749bba308-1.jpg" id="1_jkj6h"]
+[ext_resource type="Script" uid="uid://dgt4n02biv1hw" path="res://scripts/player_ui.gd" id="1_sk4pr"]
+
+[node name="PlayerUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sk4pr")
+
+[node name="StatsPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -68.0
+offset_right = 227.0
+grow_vertical = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="StatsPanel"]
+layout_mode = 2
+
+[node name="HealthBar" type="ProgressBar" parent="StatsPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="HealthLabel" type="Label" parent="StatsPanel/VBoxContainer/HealthBar"]
+layout_mode = 0
+offset_right = 78.0
+offset_bottom = 23.0
+text = "Health"
+
+[node name="CoinsLabel" type="Label" parent="StatsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Coins: 12832"
+
+[node name="DeathScreen" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="DeathScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.780392)
+
+[node name="CenterContainer" type="CenterContainer" parent="DeathScreen/ColorRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DeadHahaDELETELATER" type="TextureRect" parent="DeathScreen/ColorRect/CenterContainer"]
+layout_mode = 2
+texture = ExtResource("1_jkj6h")

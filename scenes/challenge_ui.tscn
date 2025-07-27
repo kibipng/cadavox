@@ -1,0 +1,38 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3aa6qporonds"]
+
+[ext_resource type="Script" uid="uid://h4ne2ilwi2af" path="res://scripts/challenge_ui.gd" id="1_nwfvp"]
+
+[node name="ChallengeUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nwfvp")
+
+[node name="ChallengePanel" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ChallengePanel"]
+layout_mode = 2
+
+[node name="ChallengeLabel" type="Label" parent="ChallengePanel/VBoxContainer"]
+layout_mode = 2
+text = "challenge"
+
+[node name="DescriptionLabel" type="Label" parent="ChallengePanel/VBoxContainer"]
+layout_mode = 2
+text = "desc"
+
+[node name="TimerLabel" type="Label" parent="ChallengePanel/VBoxContainer"]
+layout_mode = 2
+text = "timer"
+
+[node name="CountingLabel" type="Label" parent="ChallengePanel/VBoxContainer"]
+layout_mode = 2
+text = "how many counted thus far"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]

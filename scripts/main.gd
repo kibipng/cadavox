@@ -8,9 +8,7 @@ extends Node3D
 const TEXT_CHARACTER = preload("res://scenes/text_character.tscn")
 
 var lobby_id = 0
-
 var previous_sentence: String = ""
-
 var lobby_created: bool = false
 
 var peer = SteamMultiplayerPeer
@@ -24,15 +22,37 @@ var terrain_seed_set: bool = false
 # Very conservative word batching variables
 var pending_words: Array = []
 var word_batch_timer: float = 0.0
-var word_batch_interval: float = 3.0  # Much longer interval - 3 seconds
-var max_words_per_batch: int = 2      # Even smaller batches - only 2 words max
+var word_batch_interval: float = 3.0
+var max_words_per_batch: int = 2
+
+# Manager references
+@onready var challenge_manager: Node
+@onready var player_stats_manager: Node
 
 func _ready() -> void:
-	add_to_group("main")  # Add this so SteamManager can find the main scene
+	add_to_group("main")
 	peer = SteamManager.peer
 	
 	peer.lobby_created.connect(_on_lobby_created)
 	Steam.lobby_match_list.connect(_on_lobby_match_list)
+	
+	# Initialize systems
+	player_stats_manager = preload("res://scripts/player_stats_manager.gd").new()
+	add_child(player_stats_manager)
+	player_stats_manager.name = "PlayerStatsManager"
+	
+	challenge_manager = preload("res://scripts/challenge_manager.gd").new()
+	add_child(challenge_manager)
+	challenge_manager.name = "ChallengeManager"
+	
+	print("Main: Created player_stats_manager: ", player_stats_manager != null)
+	print("Main: Created challenge_manager: ", challenge_manager != null)
+	
+	# Add this after creating the managers:
+	await get_tree().process_frame  # Wait one frame
+	#print("Main: Groups available: ", get_tree().get_groups())
+	print("Main: Nodes in player_stats group: ", get_tree().get_nodes_in_group("player_stats"))
+	print("Main: Nodes in challenge_manager group: ", get_tree().get_nodes_in_group("challenge_manager"))
 
 func _process(delta: float) -> void:
 	word_batch_timer += delta
@@ -83,7 +103,8 @@ func _on_lobby_created(connect: int, _lobby_id: int):
 			terrain_seed = randi()
 			broadcast_terrain_seed()
 		
-		player_spawner.spawn_host()
+		var spawned_player = player_spawner.spawn_host()
+		initialize_new_player(spawned_player)
 
 func _on_lobby_match_list(lobbies: Array):
 	var i = 0
@@ -114,6 +135,11 @@ func join_lobby(_lobby_id):
 
 func hide_menu():
 	multiplayer_ui.hide()
+
+# Initialize player stats when they spawn
+func initialize_new_player(player_node):
+	if player_stats_manager and player_node:
+		player_stats_manager.initialize_player(player_node.steam_id)
 
 # Broadcast terrain seed to all clients
 func broadcast_terrain_seed():
@@ -164,16 +190,22 @@ func find_differences_in_sentences(og_sentence: String, new_sentence: String) ->
 	
 	return diff
 
-# Modified spawn_word function with optimized batching
+# Modified spawn_word function with challenge validation
 func spawn_word(new_text: String):
 	var new_words = find_differences_in_sentences(previous_sentence, remove_punctuation(new_text))
 	
 	for word in new_words:
-		if !word_bank.has(word.to_lower()):
+		# Validate word against current challenge
+		var is_valid = true
+		if challenge_manager:
+			is_valid = challenge_manager.validate_word(word, SteamManager.STEAM_ID)
+		
+		# Only spawn if valid and not already in word bank
+		if is_valid and !word_bank.has(word.to_lower()):
 			var pos = Vector3(randf_range(-20, 20), 50, randf_range(-20, 20))
 			var rotation_y = randf_range(-360, 360)
 			
-			# Add to pending batch (but don't send immediately)
+			# Add to pending batch
 			pending_words.append({
 				"word": word,
 				"position": [pos.x, pos.y, pos.z],
@@ -182,8 +214,6 @@ func spawn_word(new_text: String):
 			
 			# Also spawn locally
 			spawn_word_locally(word, pos, rotation_y)
-			
-			# Remove immediate sending - let the timer handle all batching
 
 func send_word_batch():
 	if pending_words.size() == 0:
@@ -203,9 +233,6 @@ func send_word_batch():
 	}
 	
 	SteamManager.send_p2p_packet(0, batch_data)
-	
-	# If there are more words, they'll be sent in the next interval
-	# No more immediate sending or loops
 
 # Function to spawn words locally on each client with synchronized rotation
 func spawn_word_locally(word: String, pos: Vector3, rotation_y: float):
@@ -249,7 +276,6 @@ func handle_terrain_destruction(destruction_data: Dictionary):
 	var sender_steam_id = destruction_data["steam_id"]
 	
 	# Only apply if this destruction is from someone else
-	# (the sender already applied it locally)
 	if sender_steam_id != SteamManager.STEAM_ID:
 		apply_terrain_destruction(pos, radius)
 		print("Applied terrain destruction at ", pos, " with radius ", radius, " from ", destruction_data["username"])
@@ -260,6 +286,24 @@ func apply_terrain_destruction(pos: Vector3, radius: float):
 		var voxel_tool = terrain.get_voxel_tool()
 		voxel_tool.mode = VoxelTool.MODE_REMOVE
 		voxel_tool.do_sphere(pos, radius)
+
+# NEW CHALLENGE MESSAGE HANDLERS (following your existing pattern)
+func handle_challenge_start(message_data: Dictionary):
+	if challenge_manager:
+		challenge_manager.handle_challenge_start(message_data)
+
+func handle_challenge_end(message_data: Dictionary):
+	if challenge_manager:
+		challenge_manager.handle_challenge_end()
+
+func handle_counting_progress(message_data: Dictionary):
+	if challenge_manager:
+		challenge_manager.handle_counting_progress(message_data)
+
+# NEW PLAYER STATS MESSAGE HANDLER (following your existing pattern)
+func handle_player_stats_sync(message_data: Dictionary):
+	if player_stats_manager:
+		player_stats_manager.handle_stats_sync(message_data)
 
 func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
 	if !is_partial:

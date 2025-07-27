@@ -1,8 +1,8 @@
 extends RigidBody3D
 
 var broken = false
-var spawner_id: int = -1  # Track who spawned this letter
-var is_being_freed = false  # Prevent multiple free calls
+var spawner_id: int = -1
+var is_being_freed = false
 
 @export var grass_mat : StandardMaterial3D
 @export var grassy_dirt_mat : StandardMaterial3D
@@ -20,9 +20,21 @@ func _on_timer_timeout() -> void:
 func _on_area_3d_body_entered(body: Node3D) -> void:
 	if broken or is_being_freed:
 		return
+	
+	# Check if hit a player and deal damage
+	if body.is_in_group("players"):
+		var player_stats = get_tree().get_first_node_in_group("player_stats")
+		if player_stats:
+			player_stats.damage_player(body.steam_id, 20)  # Deal 20 damage
+		
+		# Mark as broken and start cleanup timer
+		broken = true
+		$Timer.start()
+		return
+	
+	# Original terrain collision code
 	if body.name == "Terrain":
 		# Only the original spawner should handle terrain destruction
-		# to prevent duplicate destruction calls
 		if spawner_id == SteamManager.STEAM_ID:
 			destroy_terrain_at_position(global_position)
 		
@@ -55,8 +67,4 @@ func safe_free():
 		return
 	
 	is_being_freed = true
-	
-	# Simply queue_free with a small delay to let any pending sync finish
 	call_deferred("queue_free")
-
-# Remove the _final_free function - we don't need it

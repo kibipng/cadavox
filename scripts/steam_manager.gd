@@ -268,6 +268,22 @@ func read_p2p_msg_packet():
 				
 				"terrain_destruction":
 					main_scene.handle_terrain_destruction(readable_data)
+				
+				"challenge_start":
+					if main_scene.has_method("handle_challenge_start"):
+						main_scene.handle_challenge_start(readable_data)
+				
+				"challenge_end":
+					if main_scene.has_method("handle_challenge_end"):
+						main_scene.handle_challenge_end(readable_data)
+				
+				"counting_progress":
+					if main_scene.has_method("handle_counting_progress"):
+						main_scene.handle_counting_progress(readable_data)
+				
+				"player_stats_sync":
+					if main_scene.has_method("handle_player_stats_sync"):
+						main_scene.handle_player_stats_sync(readable_data)
 
 func read_p2p_voice_packet():
 	var packet_size: int = Steam.getAvailableP2PPacketSize(1)
