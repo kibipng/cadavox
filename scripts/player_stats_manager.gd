@@ -17,7 +17,7 @@ func _ready():
 func initialize_player(steam_id: int):
 	player_stats[steam_id] = {
 		"health": max_health,
-		"coins": 0,
+		"coins": 100,
 		"is_dead": false
 	}
 	

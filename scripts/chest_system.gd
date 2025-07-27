@@ -59,15 +59,15 @@ func _ready():
 	
 	# Spawn new chests every few minutes
 	var timer = Timer.new()
-	timer.wait_time = 120.0  # 2 minutes
+	timer.wait_time = 30.0  # 2 minutes
 	timer.timeout.connect(spawn_random_chest)
 	timer.autostart = true
 	add_child(timer)
 
 func spawn_initial_chests():
 	# Spawn some chests at game start
-	for i in range(5):
-		await get_tree().create_timer(randf() * 10.0).timeout
+	for i in range(100):
+		#await get_tree().create_timer(randf() * 10.0).timeout
 		spawn_random_chest()
 
 func spawn_random_chest():
@@ -77,15 +77,14 @@ func spawn_random_chest():
 	# Find a random underground position
 	var attempts = 0
 	while attempts < 10:
-		var x = randf_range(-50, 50)
-		var z = randf_range(-50, 50)
-		var surface_y = get_surface_height(x, z)
-		var chest_y = surface_y - randf_range(5, 15)  # 5-15 blocks underground
+		var x = randf_range(-25, 25)
+		var z = randf_range(-25, 25)
+		var y = randf_range(0, -5)
 		
-		var chest_pos = Vector3(x, chest_y, z)
+		var chest_pos = Vector3(x, y, z)
 		
 		# Determine chest type
-		var chest_type = determine_chest_type()
+		var chest_type = "rare"#determine_chest_type()
 		
 		# Create the chest
 		create_chest(chest_pos, chest_type)

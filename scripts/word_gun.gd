@@ -152,15 +152,18 @@ func _input(event: InputEvent):
 		return
 	
 	# Fire on left click
-	if event.is_action_pressed("fire"):  # You'll need to add this input action
+	if Input.is_action_just_pressed("fire"):  # You'll need to add this input action
 		fire_word_gun()
+		if word_gun_ammo.is_empty():
+			disable_word_gun_mode()
+		
 	
 	# Toggle word gun with 'G' key or another key
-	if event.is_action_pressed("toggle_word_gun"):
-		if word_gun_active:
-			disable_word_gun_mode()
-		else:
-			enable_word_gun_mode()
+	#if event.is_action_pressed("toggle_word_gun"):
+		#if word_gun_active:
+			#disable_word_gun_mode()
+		#else:
+			#enable_word_gun_mode()
 
 # Handle incoming word gun shots from other players
 func handle_word_gun_shot(shot_data: Dictionary):
