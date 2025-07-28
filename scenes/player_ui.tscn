@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://blwkjk5h8di37"]
+[gd_scene load_steps=6 format=3 uid="uid://blwkjk5h8di37"]
 
 [ext_resource type="Texture2D" uid="uid://dj132rju2lxfx" path="res://29a3817827bc4616d12b6db749bba308-1.jpg" id="1_jkj6h"]
 [ext_resource type="Script" uid="uid://dgt4n02biv1hw" path="res://scripts/player_ui.gd" id="1_sk4pr"]
+[ext_resource type="Texture2D" uid="uid://cjdu8qc6xypih" path="res://Healthbar_no_Text.png" id="3_8isll"]
+[ext_resource type="FontFile" uid="uid://cs2m5apa1dhid" path="res://MedodicaRegular.otf" id="4_7ctsh"]
+[ext_resource type="Texture2D" uid="uid://b6q0ycbkx5l2v" path="res://foxxy.png" id="5_7ctsh"]
 
 [node name="PlayerUI" type="Control"]
 layout_mode = 3
@@ -11,31 +14,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_sk4pr")
-
-[node name="StatsPanel" type="PanelContainer" parent="."]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -68.0
-offset_right = 227.0
-grow_vertical = 0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="StatsPanel"]
-layout_mode = 2
-
-[node name="HealthBar" type="ProgressBar" parent="StatsPanel/VBoxContainer"]
-layout_mode = 2
-
-[node name="HealthLabel" type="Label" parent="StatsPanel/VBoxContainer/HealthBar"]
-layout_mode = 0
-offset_right = 78.0
-offset_bottom = 23.0
-text = "Health"
-
-[node name="CoinsLabel" type="Label" parent="StatsPanel/VBoxContainer"]
-layout_mode = 2
-text = "Coins: 12832"
 
 [node name="DeathScreen" type="Control" parent="."]
 layout_mode = 1
@@ -52,7 +30,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.780392)
+color = Color(0, 0, 0, 0.435294)
 
 [node name="CenterContainer" type="CenterContainer" parent="DeathScreen/ColorRect"]
 layout_mode = 1
@@ -63,5 +41,41 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="DeadHahaDELETELATER" type="TextureRect" parent="DeathScreen/ColorRect/CenterContainer"]
+visible = false
 layout_mode = 2
 texture = ExtResource("1_jkj6h")
+
+[node name="StatsPanel" type="TextureRect" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -96.0
+offset_right = 242.0
+grow_vertical = 0
+texture = ExtResource("3_8isll")
+
+[node name="HealthLabel" type="Label" parent="StatsPanel"]
+layout_mode = 2
+offset_left = 94.0
+offset_top = 50.0
+offset_right = 321.0
+offset_bottom = 73.0
+theme_override_fonts/font = ExtResource("4_7ctsh")
+text = "HP: 12312/100"
+
+[node name="CoinsLabel" type="Label" parent="StatsPanel"]
+layout_mode = 2
+offset_left = 74.0
+offset_top = 70.0
+offset_right = 301.0
+offset_bottom = 93.0
+theme_override_fonts/font = ExtResource("4_7ctsh")
+text = "Coins: 123"
+
+[node name="TextureRect" type="TextureRect" parent="StatsPanel"]
+layout_mode = 0
+offset_right = 242.0
+offset_bottom = 96.0
+texture = ExtResource("5_7ctsh")

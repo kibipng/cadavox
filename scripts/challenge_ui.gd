@@ -2,11 +2,11 @@
 
 extends Control
 
-@onready var challenge_label: Label = $ChallengePanel/VBoxContainer/ChallengeLabel
-@onready var description_label: Label = $ChallengePanel/VBoxContainer/DescriptionLabel
-@onready var timer_label: Label = $ChallengePanel/VBoxContainer/TimerLabel
-@onready var counting_label: Label = $ChallengePanel/VBoxContainer/CountingLabel
-@onready var challenge_panel: PanelContainer = $ChallengePanel
+@onready var challenge_label: Label = $ChallengeLabel
+@onready var description_label: Label = $DescriptionLabel
+@onready var timer_label: Label = $TimerLabel
+@onready var counting_label: Label = $CountingLabel
+#@onready var challenge_panel: PanelContainer = $ChallengePanel
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 
 var challenge_manager: Node
@@ -16,8 +16,7 @@ func _ready():
 	print("ChallengeUI: Starting _ready()")
 	
 	# Hide panel initially
-	challenge_panel.visible = false
-	counting_label.visible = false
+	visible = false
 	
 	# Wait for managers to be created, then initialize
 	call_deferred("initialize_ui")
@@ -84,7 +83,7 @@ func _on_challenge_started(challenge_data: Dictionary):
 		counting_label.visible = false
 	
 	# Show panel with animation
-	challenge_panel.visible = true
+	#challenge_panel.visible = true
 	print("ChallengeUI: Made challenge panel visible")
 	
 	if animation_player.has_animation("challenge_appear"):
@@ -101,5 +100,5 @@ func _on_challenge_ended():
 		animation_player.play("challenge_disappear")
 		print("ChallengeUI: Playing disappear animation")
 	else:
-		challenge_panel.visible = false
+		#challenge_panel.visible = false
 		print("ChallengeUI: Hiding challenge panel")

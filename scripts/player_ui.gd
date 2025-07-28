@@ -2,9 +2,9 @@
 
 extends Control
 
-@onready var health_bar: ProgressBar = $StatsPanel/VBoxContainer/HealthBar
-@onready var health_label: Label = $StatsPanel/VBoxContainer/HealthBar/HealthLabel
-@onready var coins_label: Label = $StatsPanel/VBoxContainer/CoinsLabel
+#@onready var health_bar: ProgressBar = $StatsPanel/VBoxContainer/HealthBar
+@onready var health_label: Label = $StatsPanel/HealthLabel
+@onready var coins_label: Label = $StatsPanel/CoinsLabel
 @onready var death_screen: Control = $DeathScreen
 
 var player_stats_manager: Node
@@ -77,17 +77,17 @@ func update_health_ui():
 	
 	print("PlayerUI: Health: ", health, "/", max_health)
 	
-	health_bar.value = health
-	health_bar.max_value = max_health
+	#health_bar.value = health
+	#health_bar.max_value = max_health
 	health_label.text = "%d/%d" % [health, max_health]
 	
 	# Change color based on health
 	if health < max_health * 0.25:
-		health_bar.modulate = Color.RED
+		health_label.modulate = Color.RED
 	elif health < max_health * 0.5:
-		health_bar.modulate = Color.YELLOW
+		health_label.modulate = Color.YELLOW
 	else:
-		health_bar.modulate = Color.GREEN
+		health_label.modulate = Color.GREEN
 	
 	print("PlayerUI: Health UI updated successfully")
 
@@ -98,5 +98,5 @@ func update_coins_ui():
 		return
 	
 	var coins = player_stats_manager.get_player_coins(my_steam_id)
-	coins_label.text = "Coins: %d" % coins
+	coins_label.text = "Coins: " + str(coins)
 	print("PlayerUI: Coins UI updated to: ", coins)
