@@ -45,9 +45,14 @@ func _ready() -> void:
 	add_child(challenge_manager)
 	challenge_manager.name = "ChallengeManager"
 	
-	var chest_manager = preload("res://scripts/chest_manager.gd").new()
-	add_child(chest_manager)
-	chest_manager.name = "ChestManager"
+	print("Main: Created player_stats_manager: ", player_stats_manager != null)
+	print("Main: Created challenge_manager: ", challenge_manager != null)
+	
+	# Add this after creating the managers:
+	await get_tree().process_frame  # Wait one frame
+	#print("Main: Groups available: ", get_tree().get_groups())
+	print("Main: Nodes in player_stats group: ", get_tree().get_nodes_in_group("player_stats"))
+	print("Main: Nodes in challenge_manager group: ", get_tree().get_nodes_in_group("challenge_manager"))
 
 func _process(delta: float) -> void:
 	word_batch_timer += delta
@@ -76,16 +81,6 @@ func _on_join_btn_pressed() -> void:
 		i.queue_free()
 	
 	open_lobby_list()
-
-func handle_chest_spawn(message_data: Dictionary):
-	var chest_manager = get_tree().get_first_node_in_group("chest_manager")
-	if chest_manager:
-		chest_manager.handle_chest_spawn(message_data)
-
-func handle_chest_opened(message_data: Dictionary):
-	var chest_manager = get_tree().get_first_node_in_group("chest_manager")
-	if chest_manager:
-		chest_manager.handle_chest_opened(message_data)
 
 func open_lobby_list():
 	Steam.addRequestLobbyListDistanceFilter(Steam.LOBBY_DISTANCE_FILTER_WORLDWIDE)

@@ -6,9 +6,6 @@ var voxel_terrain : VoxelTerrain
 var voxel_tool : VoxelTool
 const VOXEL_VIEWER = preload("res://scenes/voxel_viewer.tscn")
 
-
-var status_effects: Dictionary = {}  # effect_name -> {duration: float, strength: float}
-
 @onready var head = $Head
 @onready var camera_3d : Camera3D = $Head/Camera3D
 @export var player_name : String = "kris deltarune"
@@ -123,65 +120,47 @@ func _physics_process(delta: float) -> void:
 	if !is_multiplayer_authority() or is_dead:
 		return
 	
-	# Update status effects
-	update_status_effects(delta)
-	
-	# Apply gravity (unless flying)
-	if not has_status_effect("flight") and not is_on_floor():
+	# Add the gravity.
+	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
-	elif has_status_effect("flight"):
-		# Flight controls
-		if Input.is_action_pressed("jump"):
-			velocity.y = JUMP_VELOCITY * 0.5
-		elif Input.is_action_pressed("crouch"):  # Add crouch action
-			velocity.y = -JUMP_VELOCITY * 0.5
-		else:
-			velocity.y = lerp(velocity.y, 0.0, delta * 5.0)  # Hover
 
-	# Handle jump (enhanced if flying)
-	if Input.is_action_just_pressed("jump"):
-		if has_status_effect("flight"):
-			velocity.y = JUMP_VELOCITY * 1.5
-		elif is_on_floor():
-			velocity.y = JUMP_VELOCITY
-	
-	# Calculate speed (enhanced if speed boost active)
-	var current_speed = WALK_SPEED
+	# Handle jump.
+	if Input.is_action_just_pressed("jump") and is_on_floor():
+		velocity.y = JUMP_VELOCITY
+		
+	# handle sprint
 	if Input.is_action_pressed("sprint"):
-		current_speed = SPRINT_SPEED
-	
-	if has_status_effect("speed_boost"):
-		var boost_multiplier = 1.5 + get_status_effect_strength("speed_boost")
-		current_speed *= boost_multiplier
-	
-	# Rest of movement code remains the same...
+		speed = SPRINT_SPEED
+	else:
+		speed = WALK_SPEED
+
+	# Get the input direction and handle the movement/deceleration.
 	var input_dir := Input.get_vector("left", "right", "up", "down")
 	var direction = (head.transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-	
-	if is_on_floor() or has_status_effect("flight"):
+	if is_on_floor():
 		if direction:
-			velocity.x = direction.x * current_speed
-			velocity.z = direction.z * current_speed
+			velocity.x = direction.x * speed
+			velocity.z = direction.z * speed
 		else:
-			velocity.x = lerp(velocity.x, direction.x * current_speed, delta * 7.0)
-			velocity.z = lerp(velocity.z, direction.z * current_speed, delta * 7.0)
+			velocity.x = lerp(velocity.x,direction.x*speed,delta*7.0)
+			velocity.z = lerp(velocity.z,direction.z*speed,delta*7.0)
 	else:
-		velocity.x = lerp(velocity.x, direction.x * current_speed, delta * 3.0)
-		velocity.z = lerp(velocity.z, direction.z * current_speed, delta * 3.0)
+		velocity.x = lerp(velocity.x,direction.x*speed,delta*3.0)
+		velocity.z = lerp(velocity.z,direction.z*speed,delta*3.0)
 	
-	# Head bob and FOV (same as before)
+	#head bob
 	t_bob += delta * velocity.length() * float(is_on_floor())
 	camera_3d.transform.origin = _headbob(t_bob)
 	
-	var velocity_clamped = clamp(velocity.length(), 0.5, current_speed * 2)
-	var target_fov = BASE_FOV + FOV_CHANGE * velocity_clamped
-	camera_3d.fov = lerp(camera_3d.fov, target_fov, delta * 9.0)
+	# FOV
+	var velocity_clamped = clamp(velocity.length(),0.5,SPRINT_SPEED*2)
+	var target_fov = BASE_FOV+FOV_CHANGE*velocity_clamped
+	camera_3d.fov = lerp(camera_3d.fov,target_fov,delta*9.0)
 	
 	move_and_slide()
 	
-	# Fall damage (immunity protects against this)
-	if not has_status_effect("immunity"):
-		handle_fall_damage(delta)
+	# FALL DAMAGE CHECK - AFTER move_and_slide()
+	handle_fall_damage(delta)
 
 func handle_fall_damage(delta):
 	# Simple logic: if we're on the ground and weren't falling, we're safe
@@ -349,77 +328,3 @@ func _on_player_hitbox_body_entered(body: Node3D) -> void:
 			print("Player ", steam_id, " hit by word for 20 damage!")
 		
 		# The word will handle its own cleanup in text_character.gd
-
-
-func add_status_effect(effect_name: String, duration: float, strength: float = 1.0):
-	status_effects[effect_name] = {
-		"duration": duration,
-		"strength": strength,
-		"start_time": Time.get_unix_time_from_system()
-	}
-	
-	# Apply immediate effects
-	match effect_name:
-		"speed_boost":
-			print("Speed boost activated for ", duration, " seconds!")
-		"immunity":
-			print("Challenge immunity activated for ", duration, " seconds!")
-		"flight":
-			print("Flight ability activated for ", duration, " seconds!")
-
-func update_status_effects(delta: float):
-	var current_time = Time.get_unix_time_from_system()
-	var effects_to_remove = []
-	
-	for effect_name in status_effects:
-		var effect = status_effects[effect_name]
-		var elapsed = current_time - effect["start_time"]
-		
-		if elapsed >= effect["duration"]:
-			effects_to_remove.append(effect_name)
-		else:
-			# Update effect (visual feedback, etc.)
-			update_effect_visual(effect_name, elapsed / effect["duration"])
-	
-	# Remove expired effects
-	for effect_name in effects_to_remove:
-		remove_status_effect(effect_name)
-
-func remove_status_effect(effect_name: String):
-	if status_effects.has(effect_name):
-		status_effects.erase(effect_name)
-		
-		# Clean up effect
-		match effect_name:
-			"speed_boost":
-				print("Speed boost ended")
-			"immunity":
-				print("Challenge immunity ended")
-			"flight":
-				print("Flight ability ended")
-
-func update_effect_visual(effect_name: String, progress: float):
-	# Add visual feedback for active effects
-	match effect_name:
-		"speed_boost":
-			# Add speed particles or glow
-			if has_node("SpeedGlow"):
-				$SpeedGlow.visible = true
-				$SpeedGlow.modulate.a = 1.0 - progress
-		"immunity":
-			# Add protective shield visual
-			if has_node("ImmunityShield"):
-				$ImmunityShield.visible = true
-				$ImmunityShield.rotation.y += 2.0 * get_process_delta_time()
-		"flight":
-			# Add flight particles
-			if has_node("FlightParticles"):
-				$FlightParticles.emitting = true
-
-func has_status_effect(effect_name: String) -> bool:
-	return status_effects.has(effect_name)
-
-func get_status_effect_strength(effect_name: String) -> float:
-	if status_effects.has(effect_name):
-		return status_effects[effect_name]["strength"]
-	return 0.0
