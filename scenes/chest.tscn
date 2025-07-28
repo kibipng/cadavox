@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://cf05uf43rg1ot"]
+
+[ext_resource type="Script" uid="uid://dmgfisljk0f20" path="res://scripts/chest.gd" id="1_oii8l"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_16opx"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_oii8l"]
+size = Vector3(3, 3, 3)
+
+[node name="Chest" type="StaticBody3D"]
+script = ExtResource("1_oii8l")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_16opx")
+
+[node name="InteractionArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
+shape = SubResource("BoxShape3D_oii8l")
+
+[node name="FloatingText" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+text = "sick"
