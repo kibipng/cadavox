@@ -28,9 +28,6 @@ var max_words_per_batch: int = 2
 # Manager references
 @onready var challenge_manager: Node
 @onready var player_stats_manager: Node
-@onready var chest_system: Node
-@onready var inventory_system: Node
-@onready var subtitle_system: Node
 
 func _ready() -> void:
 	add_to_group("main")
@@ -39,7 +36,7 @@ func _ready() -> void:
 	peer.lobby_created.connect(_on_lobby_created)
 	Steam.lobby_match_list.connect(_on_lobby_match_list)
 	
-	# Initialize ALL systems
+	# Initialize systems
 	player_stats_manager = preload("res://scripts/player_stats_manager.gd").new()
 	add_child(player_stats_manager)
 	player_stats_manager.name = "PlayerStatsManager"
@@ -48,22 +45,12 @@ func _ready() -> void:
 	add_child(challenge_manager)
 	challenge_manager.name = "ChallengeManager"
 	
-	chest_system = preload("res://scripts/chest_system.gd").new()
-	add_child(chest_system)
-	chest_system.name = "ChestSystem"
+	print("Main: Created player_stats_manager: ", player_stats_manager != null)
+	print("Main: Created challenge_manager: ", challenge_manager != null)
 	
-	inventory_system = preload("res://scripts/inventory_system.gd").new()
-	add_child(inventory_system)
-	inventory_system.name = "InventorySystem"
-	
-	# Initialize subtitle system using the class from player_subtitle_overlay.gd
-	#subtitle_system = preload("res://scripts/player_subtitle_overlay.gd").SubtitleSystemManager.new()
-	#add_child(subtitle_system)
-	#subtitle_system.name = "SubtitleSystem"
-	
-	print("Main: All systems initialized!")
-	
-	await get_tree().process_frame
+	# Add this after creating the managers:
+	await get_tree().process_frame  # Wait one frame
+	#print("Main: Groups available: ", get_tree().get_groups())
 	print("Main: Nodes in player_stats group: ", get_tree().get_nodes_in_group("player_stats"))
 	print("Main: Nodes in challenge_manager group: ", get_tree().get_nodes_in_group("challenge_manager"))
 
@@ -153,10 +140,6 @@ func hide_menu():
 func initialize_new_player(player_node):
 	if player_stats_manager and player_node:
 		player_stats_manager.initialize_player(player_node.steam_id)
-	
-	# Add subtitle overlay for this player
-	if subtitle_system:
-		subtitle_system.on_player_joined(player_node)
 
 # Broadcast terrain seed to all clients
 func broadcast_terrain_seed():
@@ -304,7 +287,7 @@ func apply_terrain_destruction(pos: Vector3, radius: float):
 		voxel_tool.mode = VoxelTool.MODE_REMOVE
 		voxel_tool.do_sphere(pos, radius)
 
-# CHALLENGE MESSAGE HANDLERS
+# NEW CHALLENGE MESSAGE HANDLERS (following your existing pattern)
 func handle_challenge_start(message_data: Dictionary):
 	if challenge_manager:
 		challenge_manager.handle_challenge_start(message_data)
@@ -317,66 +300,12 @@ func handle_counting_progress(message_data: Dictionary):
 	if challenge_manager:
 		challenge_manager.handle_counting_progress(message_data)
 
+# NEW PLAYER STATS MESSAGE HANDLER (following your existing pattern)
 func handle_player_stats_sync(message_data: Dictionary):
 	if player_stats_manager:
 		player_stats_manager.handle_stats_sync(message_data)
-
-# NEW CHEST SYSTEM HANDLERS
-func handle_chest_spawned(message_data: Dictionary):
-	if chest_system:
-		chest_system.handle_chest_spawned(message_data)
-
-func handle_chest_opened(message_data: Dictionary):
-	if chest_system:
-		chest_system.handle_chest_opened(message_data)
-
-func handle_mimic_activated(message_data: Dictionary):
-	if chest_system:
-		chest_system.handle_mimic_activated(message_data)
-
-# NEW INVENTORY SYSTEM HANDLERS
-func handle_inventory_sync(message_data: Dictionary):
-	if inventory_system:
-		inventory_system.handle_inventory_sync(message_data)
-
-func handle_blue_shell_fired(message_data: Dictionary):
-	if inventory_system:
-		inventory_system.handle_blue_shell_fired(message_data)
-
-func handle_blue_shell_exploded(message_data: Dictionary):
-	# Handle blue shell explosions
-	var shells = get_tree().get_nodes_in_group("blue_shells")
-	for shell in shells:
-		if shell.has_method("handle_explosion_sync"):
-			shell.handle_explosion_sync(message_data)
-
-# NEW WORD GUN HANDLER
-func handle_word_gun_shot(message_data: Dictionary):
-	print("Word gun shot received from player ", message_data["steam_id"])
-	# The word gun system will handle creating the projectile
-
-# NEW SUBTITLE HANDLER
-func handle_player_speech_subtitle(message_data: Dictionary):
-	if subtitle_system:
-		subtitle_system.handle_player_speech(message_data)
 
 func _on_speech_to_text_transcribed_msg(is_partial: Variant, new_text: Variant) -> void:
 	if !is_partial:
 		spawn_word(new_text)
 		previous_sentence = remove_punctuation(new_text)
-		
-		# Send subtitle to other players
-		if main_player:
-			var speech_data = {
-				"message": "player_speech_subtitle",
-				"steam_id": SteamManager.STEAM_ID,
-				"text": new_text,
-				"position": [main_player.global_position.x, main_player.global_position.y, main_player.global_position.z]
-			}
-			SteamManager.send_p2p_packet(0, speech_data)
-		
-		# Load word gun if active
-		if main_player and main_player.has_method("load_word_gun_ammo"):
-			var words = new_text.split(" ")
-			if words.size() > 0:
-				main_player.load_word_gun_ammo(words[-1])  # Last word spoken
