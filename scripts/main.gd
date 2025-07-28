@@ -48,6 +48,14 @@ func _ready() -> void:
 	var chest_manager = preload("res://scripts/chest_manager.gd").new()
 	add_child(chest_manager)
 	chest_manager.name = "ChestManager"
+	
+	
+	var item_system = preload("res://scripts/item_system.gd").new()
+	add_child(item_system)
+	item_system.name = "ItemSystem"
+	item_system.add_to_group("item_system")
+	print("Item system created!")
+
 
 func _process(delta: float) -> void:
 	word_batch_timer += delta
