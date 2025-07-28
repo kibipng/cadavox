@@ -66,6 +66,7 @@ func _process(delta):
 
 func _on_challenge_started(challenge_data: Dictionary):
 	print("ChallengeUI: Challenge started: ", challenge_data)
+	visible = true
 	
 	challenge_label.text = challenge_data.get("name", "Challenge!")
 	description_label.text = challenge_data.get("description", "")
@@ -94,6 +95,7 @@ func _on_challenge_ended():
 	print("ChallengeUI: Challenge ended")
 	challenge_timer = 0.0
 	counting_label.visible = false
+	visible = false
 	
 	# Hide panel with animation
 	if animation_player.has_animation("challenge_disappear"):
