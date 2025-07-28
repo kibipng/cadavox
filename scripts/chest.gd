@@ -87,13 +87,13 @@ func animate_floating_text():
 	if not cost_label.visible:
 		return
 	
-	#var tween = create_tween()
-	#tween.set_loops()
-	#var original_pos = cost_label.position
+	var tween = create_tween()
+	tween.set_loops()
+	var original_pos = cost_label.position
 	
 	# Float up and down gently
-	#tween.tween_to(cost_label, "position", original_pos + Vector3(0, 0.3, 0), 1.0)
-	#tween.tween_to(cost_label, "position", original_pos - Vector3(0, 0.3, 0), 1.0)
+	tween.tween_to(cost_label, "position", original_pos + Vector3(0, 0.3, 0), 1.0)
+	tween.tween_to(cost_label, "position", original_pos - Vector3(0, 0.3, 0), 1.0)
 
 func _input(event: InputEvent):
 	if event.is_action_pressed("interact") and is_near_player and not is_opened:

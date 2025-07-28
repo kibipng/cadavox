@@ -6,7 +6,7 @@ signal challenge_ended()
 signal player_failed_challenge(player_steam_id: int)
 
 # Challenge timing
-var challenge_duration: float = 30.0
+var challenge_duration: float = 20.0
 var time_between_challenges: float = 45.0
 var challenge_timer: float = 0.0
 var between_challenges_timer: float = 0.0
