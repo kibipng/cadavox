@@ -161,6 +161,7 @@ script = ExtResource("6_o6xl0")
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("8_tipki")
 volume_db = -31.155
+autoplay = true
 bus = &"Record"
 
 [node name="Walls" type="Node3D" parent="."]
