@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://daf78ji4580xw"]
+
+[ext_resource type="Script" uid="uid://dpij0hjpybhtb" path="res://scripts/letter_projectile.gd" id="1_bbqyi"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1b3fe"]
+size = Vector3(0.9, 0.9, 0.2)
+
+[node name="LetterProjectile" type="RigidBody3D"]
+script = ExtResource("1_bbqyi")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_1b3fe")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 3.0
