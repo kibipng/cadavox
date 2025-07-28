@@ -5,8 +5,8 @@ signal chest_spawned(chest_position: Vector3)
 signal chest_opened(chest_id: int, player_steam_id: int, reward: Dictionary)
 
 # Chest spawning configuration
-var chest_spawn_interval: float = 0.1  # Spawn every 30 seconds
-var max_chests_on_map: int = 500
+var chest_spawn_interval: float = 0.5  # Spawn every 30 seconds
+var max_chests_on_map: int = 50
 var chest_spawn_timer: float = 0.0
 
 # Chest tracking
@@ -21,8 +21,7 @@ var chest_types = {
 		"rewards": [
 			{"type": "health", "amount": 25},
 			{"type": "coins", "amount": 15},
-			{"type": "immunity", "duration": 5.0},
-			{"type": "item", "item_id": "word_gun"}
+			{"type": "immunity", "duration": 5.0}  # Challenge immunity
 		]
 	},
 	"rare": {
@@ -32,8 +31,7 @@ var chest_types = {
 			{"type": "health", "amount": 50},
 			{"type": "coins", "amount": 30},
 			{"type": "immunity", "duration": 10.0},
-			{"type": "speed_boost", "duration": 15.0},
-			{"type": "item", "item_id": "word_gun"}  # Add this
+			{"type": "speed_boost", "duration": 15.0}
 		]
 	},
 	"legendary": {
@@ -43,8 +41,7 @@ var chest_types = {
 			{"type": "full_heal", "amount": 100},
 			{"type": "coins", "amount": 100},
 			{"type": "immunity", "duration": 20.0},
-			{"type": "flight", "duration": 10.0},
-			{"type": "item", "item_id": "blue_shell"}  # Add this
+			{"type": "flight", "duration": 10.0}  # Temporary flight ability
 		]
 	}
 }
@@ -149,7 +146,13 @@ func spawn_chest_locally(chest_data: Dictionary):
 	var chest_scene = preload("res://scenes/treasure_chest.tscn")
 	var chest_instance = chest_scene.instantiate()
 	
+	var chests_node = get_node("/root/Main/Chests")
+	if not chests_node:
+		chests_node = Node3D.new()
+		chests_node.name = "Chests"
+		get_node("/root/Main").add_child(chests_node)
 	
+	chests_node.add_child(chest_instance)
 	# Set chest properties
 	var pos_array = chest_data["position"]
 	var pos = Vector3(pos_array[0], pos_array[1], pos_array[2])
@@ -161,13 +164,7 @@ func spawn_chest_locally(chest_data: Dictionary):
 	chest_instance.chest_manager = self
 	
 	# Add to scene
-	var chests_node = get_node("/root/Main/Chests")
-	if not chests_node:
-		chests_node = Node3D.new()
-		chests_node.name = "Chests"
-		get_node("/root/Main").add_child(chests_node)
 	
-	chests_node.add_child(chest_instance)
 
 # Called when player attempts to open chest
 func attempt_open_chest(chest_id: int, player_steam_id: int) -> bool:
@@ -241,12 +238,6 @@ func apply_reward(player_steam_id: int, reward: Dictionary):
 		
 		"flight":
 			apply_flight_ability(player_steam_id, reward["duration"])
-		"item":
-			var players = get_tree().get_nodes_in_group("players")
-			for player in players:
-				if player.steam_id == player_steam_id:
-					player.give_item(reward["item_id"])
-					break
 
 func apply_challenge_immunity(player_steam_id: int, duration: float):
 	# Add immunity effect to player

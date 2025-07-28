@@ -6,14 +6,6 @@ var voxel_terrain : VoxelTerrain
 var voxel_tool : VoxelTool
 const VOXEL_VIEWER = preload("res://scenes/voxel_viewer.tscn")
 
-# Inventory system
-var held_item: Dictionary = {}  # Current item data
-var held_item_mesh: MeshInstance3D = null
-var item_system: Node
-
-# Word gun specific
-var word_gun_ammo: Array = []  # Array of single letters
-var last_spoken_word: String = ""
 
 var status_effects: Dictionary = {}  # effect_name -> {duration: float, strength: float}
 
@@ -106,17 +98,6 @@ func _ready() -> void:
 	
 	#get rid of mouse
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	
-	
-	# Get item system reference
-	item_system = get_tree().get_first_node_in_group("item_system")
-	
-	# Create held item mesh node
-	if is_multiplayer_authority():
-		held_item_mesh = MeshInstance3D.new()
-		held_item_mesh.name = "HeldItemMesh"
-		camera_3d.add_child(held_item_mesh)
-		held_item_mesh.visible = false
 
 func _on_player_died(died_steam_id: int):
 	if died_steam_id == steam_id:
@@ -201,185 +182,6 @@ func _physics_process(delta: float) -> void:
 	# Fall damage (immunity protects against this)
 	if not has_status_effect("immunity"):
 		handle_fall_damage(delta)
-
-func give_item(item_id: String) -> bool:
-	if not item_system:
-		return false
-	
-	# Drop current item if holding one
-	if held_item.size() > 0:
-		drop_held_item()
-	
-	# Get item definition
-	var item_def = item_system.get_item_definition(item_id)
-	if item_def.size() == 0:
-		return false
-	
-	# Set up held item
-	held_item = {
-		"id": item_id,
-		"definition": item_def
-	}
-	
-	# Load and show item mesh
-	if is_multiplayer_authority():
-		update_held_item_visual()
-	
-	print("Picked up: ", item_def["name"])
-	return true
-
-func update_held_item_visual():
-	if not held_item_mesh:
-		return
-	
-	if held_item.size() == 0:
-		held_item_mesh.visible = false
-		return
-	
-	# Load custom mesh
-	var mesh_path = held_item["definition"]["mesh_path"]
-	var mesh_resource = load(mesh_path)
-	
-	if mesh_resource:
-		held_item_mesh.mesh = mesh_resource
-		
-		# Position relative to camera
-		var pos = held_item["definition"]["hold_position"]
-		var rot = held_item["definition"]["hold_rotation"]
-		
-		held_item_mesh.position = pos
-		held_item_mesh.rotation_degrees = rot
-		held_item_mesh.visible = true
-	else:
-		print("Failed to load mesh: ", mesh_path)
-
-func drop_held_item():
-	if held_item.size() == 0:
-		return
-	
-	# Spawn dropped item in world (optional - could just destroy it)
-	print("Dropped: ", held_item["definition"]["name"])
-	
-	# Clear held item
-	held_item.clear()
-	if held_item_mesh:
-		held_item_mesh.visible = false
-
-func use_held_item():
-	var item_id = held_item["id"]
-	
-	match item_id:
-		"word_gun":
-			use_word_gun()
-		"blue_shell":
-			use_blue_shell()
-
-# Word Gun Implementation
-func load_word_gun_ammo(word: String):
-	if held_item.get("id", "") != "word_gun":
-		return
-	
-	# Convert word to individual letters
-	word_gun_ammo.clear()
-	for letter in word.to_upper():
-		if letter != " ":  # Skip spaces
-			word_gun_ammo.append(letter)
-	
-	last_spoken_word = word
-	print("Word gun loaded with: ", word_gun_ammo, " (", word_gun_ammo.size(), " shots)")
-
-func use_word_gun():
-	if word_gun_ammo.size() == 0:
-		print("Word gun is empty! Speak a word to load it.")
-		return
-	
-	# Fire one letter
-	var letter = word_gun_ammo.pop_front()
-	fire_word_gun_letter(letter)
-	
-	print("Fired letter: ", letter, " (", word_gun_ammo.size(), " shots remaining)")
-
-func fire_word_gun_letter(letter: String):
-	# Get firing direction from camera
-	var fire_direction = -camera_3d.global_transform.basis.z
-	var fire_position = camera_3d.global_position + fire_direction * 2.0
-	
-	# Create letter projectile
-	var main = get_node("/root/Main")
-	if main and main.has_method("spawn_letter_projectile"):
-		main.spawn_letter_projectile(letter, fire_position, fire_direction, steam_id)
-
-# Blue Shell Implementation  
-func use_blue_shell():
-	print("Using Blue Turtle Shell!")
-	
-	# Send blue shell to target richest player
-	var target_steam_id = find_richest_player()
-	if target_steam_id != -1:
-		launch_blue_shell(target_steam_id)
-	else:
-		print("No valid target found!")
-	
-	# Remove item after use
-	held_item.clear()
-	if held_item_mesh:
-		held_item_mesh.visible = false
-
-func find_richest_player() -> int:
-	var player_stats = get_tree().get_first_node_in_group("player_stats")
-	if not player_stats:
-		return -1
-	
-	var richest_id = -1
-	var highest_coins = -1
-	
-	# Check all players
-	for player in get_tree().get_nodes_in_group("players"):
-		#if player.steam_id == steam_id:
-			#continue  # Don't target yourself
-		
-		var coins = player_stats.get_player_coins(player.steam_id)
-		if coins > highest_coins:
-			highest_coins = coins
-			richest_id = player.steam_id
-	
-	return richest_id
-
-func launch_blue_shell(target_steam_id: int):
-	# Send message to spawn blue shell projectile
-	var shell_data = {
-		"message": "blue_shell_launch",
-		"launcher_steam_id": steam_id,
-		"target_steam_id": target_steam_id,
-		"start_position": [global_position.x, global_position.y + 2, global_position.z]
-	}
-	SteamManager.send_p2p_packet(0, shell_data)
-	
-	# Also spawn locally
-	var main = get_node("/root/Main")
-	if main and main.has_method("spawn_blue_shell_projectile"):
-		main.spawn_blue_shell_projectile(shell_data)
-
-# Override the speech processing to load word gun
-func process_speech_for_word_gun(new_text: String):
-	# This should be called from your speech-to-text processing
-	if held_item.get("id", "") == "word_gun":
-		# Get the last word spoken
-		var words = new_text.split(" ")
-		if words.size() > 0:
-			var last_word = words[-1].strip_edges()
-			if last_word.length() > 0:
-				load_word_gun_ammo(last_word)
-
-# Add status effect for holding items (visual feedback)
-func update_held_item_effects(delta: float):
-	if held_item.size() > 0 and held_item_mesh:
-		# Add subtle floating animation
-		var time = Time.get_unix_time_from_system()
-		var float_offset = sin(time * 2.0) * 0.02
-		
-		var base_pos = held_item["definition"]["hold_position"]
-		held_item_mesh.position.y = base_pos.y + float_offset
 
 func handle_fall_damage(delta):
 	# Simple logic: if we're on the ground and weren't falling, we're safe
@@ -492,17 +294,11 @@ func _input(event: InputEvent) -> void:
 	
 	if Input.is_action_just_pressed("exit_mouse"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	if Input.is_action_just_pressed("dig"):
-		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	
 	if Input.is_action_just_pressed("voice_record"):
 		record_voice(true)
 	elif Input.is_action_just_released("voice_record"):
 		record_voice(false)
-	
-	# Use item with right mouse button
-	if Input.is_action_just_pressed("use_item") and held_item.size() > 0:
-		use_held_item()
 
 func _process(delta: float) -> void:
 	if is_multiplayer_authority() and !is_dead:
