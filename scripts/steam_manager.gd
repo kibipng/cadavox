@@ -284,6 +284,14 @@ func read_p2p_msg_packet():
 				"player_stats_sync":
 					if main_scene.has_method("handle_player_stats_sync"):
 						main_scene.handle_player_stats_sync(readable_data)
+				
+				"chest_spawn":
+					if main_scene.has_method("handle_chest_spawn"):
+						main_scene.handle_chest_spawn(readable_data)
+					
+				"chest_opened":
+					if main_scene.has_method("handle_chest_opened"):
+						main_scene.handle_chest_opened(readable_data)
 
 func read_p2p_voice_packet():
 	var packet_size: int = Steam.getAvailableP2PPacketSize(1)

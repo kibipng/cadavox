@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://dc7dxqjic4hic"]
+
+[ext_resource type="Script" uid="uid://pk68v2qchxh5" path="res://scripts/treasure_chest.gd" id="1_75h8e"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qi3dm"]
+size = Vector3(1.5, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_75h8e"]
+size = Vector3(3, 3, 3)
+
+[node name="TreasureChest" type="StaticBody3D"]
+script = ExtResource("1_75h8e")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_qi3dm")
+
+[node name="InteractionArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
+shape = SubResource("BoxShape3D_75h8e")
+
+[node name="CostLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+text = "15 Coins
+"

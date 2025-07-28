@@ -17,7 +17,7 @@ func _ready():
 func initialize_player(steam_id: int):
 	player_stats[steam_id] = {
 		"health": max_health,
-		"coins": 0,
+		"coins": 100,
 		"is_dead": false
 	}
 	
@@ -104,6 +104,16 @@ func sync_player_stats(steam_id: int):
 	}
 	
 	SteamManager.send_p2p_packet(0, sync_data)
+
+func heal_player(steam_id: int, heal_amount: int):
+	if not player_stats.has(steam_id) or player_stats[steam_id]["is_dead"]:
+		return
+	
+	player_stats[steam_id]["health"] += heal_amount
+	player_stats[steam_id]["health"] = min(player_stats[steam_id]["health"], max_health)
+	
+	player_health_changed.emit(steam_id, player_stats[steam_id]["health"])
+	sync_player_stats(steam_id)
 
 # Handle incoming player stats sync (called by Main.gd)
 func handle_stats_sync(sync_data: Dictionary):
