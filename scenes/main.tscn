@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://br0q66onus1re"]
+[gd_scene load_steps=29 format=3 uid="uid://br0q66onus1re"]
 
 [ext_resource type="Script" uid="uid://ddl3n5he0vbvn" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="Script" uid="uid://dq3wedb56wb7d" path="res://scripts/letter_spawner.gd" id="2_ya4ey"]
@@ -17,10 +17,9 @@
 [ext_resource type="Texture2D" uid="uid://bpt0ve2jymjta" path="res://textures/broken_wall_diff_4k.jpg" id="8_yc10j"]
 [ext_resource type="Texture2D" uid="uid://cyfliqcgbsscy" path="res://textures/brown_mud_02_nor_dx_4k.jpg" id="9_dp3eg"]
 [ext_resource type="Texture2D" uid="uid://c47c6jtrjh0c" path="res://textures/coast_sand_rocks_02_nor_dx_4k.jpg" id="9_jbj1t"]
-[ext_resource type="Texture2D" uid="uid://jwlj60bmgykl" path="res://4K_acoustic_panel_3_height.png" id="9_ya4ey"]
 [ext_resource type="Texture2D" uid="uid://c4s1relrfe8hw" path="res://textures/brown_mud_02_diff_4k.jpg" id="10_0ld40"]
 [ext_resource type="Texture2D" uid="uid://1y0qb7hggubl" path="res://textures/coast_sand_rocks_02_diff_4k.jpg" id="10_muem4"]
-[ext_resource type="Texture2D" uid="uid://cciwyoargy4xx" path="res://textures/Sprite-0001.png" id="18_0ld40"]
+[ext_resource type="Texture2D" uid="uid://1h5sagmq8c1n" path="res://scenes/Sprite-0003.png" id="20_gqmmt"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tbgi4"]
 sky_top_color = Color(0.0171649, 2.47332e-05, 0.19702, 1)
@@ -70,16 +69,11 @@ height_range = 20.0
 
 [sub_resource type="VoxelMesherTransvoxel" id="VoxelMesherTransvoxel_o6xl0"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trceg"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0ld40"]
 transparency = 1
-albedo_texture = ExtResource("18_0ld40")
-normal_enabled = true
-heightmap_enabled = true
-heightmap_scale = 7.0
-heightmap_texture = ExtResource("9_ya4ey")
+albedo_texture = ExtResource("20_gqmmt")
 uv1_scale = Vector3(0.75, 0.75, 0.75)
 uv1_triplanar = true
-uv1_world_triplanar = true
 texture_filter = 0
 
 [node name="Main" type="Node3D"]
@@ -161,34 +155,38 @@ script = ExtResource("6_o6xl0")
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("8_tipki")
 volume_db = -31.155
-autoplay = true
 bus = &"Record"
 
 [node name="Walls" type="Node3D" parent="."]
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -286.3, -25)
 use_collision = true
-size = Vector3(50, 200, 0.25)
-material = SubResource("StandardMaterial3D_trceg")
+size = Vector3(50, 800, 0.25)
+material = SubResource("StandardMaterial3D_0ld40")
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.100002, 0, 25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.100002, -286.3, 25)
 use_collision = true
-size = Vector3(50, 200, 0.25)
-material = SubResource("StandardMaterial3D_trceg")
+size = Vector3(50, 800, 0.25)
+material = SubResource("StandardMaterial3D_0ld40")
 
 [node name="CSGBox3D3" type="CSGBox3D" parent="Walls"]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -25, 0, -9.53674e-07)
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -25, -286.3, -9.53674e-07)
 use_collision = true
-size = Vector3(50.2, 200, 0.25)
-material = SubResource("StandardMaterial3D_trceg")
+size = Vector3(50.2, 800, 0.25)
+material = SubResource("StandardMaterial3D_0ld40")
 
 [node name="CSGBox3D4" type="CSGBox3D" parent="Walls"]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 25, 0, 0.100001)
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 25, -286.3, 0.100001)
 use_collision = true
-size = Vector3(50, 200, 0.25)
-material = SubResource("StandardMaterial3D_trceg")
+size = Vector3(50, 800, 0.25)
+material = SubResource("StandardMaterial3D_0ld40")
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -676.298, 0)
+size = Vector3(50, 1, 50)
+material = SubResource("StandardMaterial3D_0ld40")
 
 [connection signal="pressed" from="MultiplayerUI/VBoxContainer/HBoxContainer/HostBtn" to="." method="_on_host_btn_pressed"]
 [connection signal="pressed" from="MultiplayerUI/VBoxContainer/HBoxContainer/JoinBtn" to="." method="_on_join_btn_pressed"]

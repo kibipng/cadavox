@@ -10,6 +10,8 @@ var is_being_freed = false
 @export var aerial_rocks_mat : StandardMaterial3D
 @export var stone_mat : StandardMaterial3D
 
+var particles = preload("res://scenes/explosion_particles.tscn")
+
 func _ready():
 	# Set the spawner ID to the current player's Steam ID
 	spawner_id = SteamManager.STEAM_ID
@@ -38,6 +40,13 @@ func _on_area_3d_body_entered(body: Node3D) -> void:
 		if spawner_id == SteamManager.STEAM_ID:
 			destroy_terrain_at_position(global_position)
 		
+		
+		var j = particles.instantiate()
+		get_parent().add_child(j)
+		j.global_position = global_position
+		for child in j.get_children():
+			child.emitting = true
+		print("sex")
 		broken = true
 		$Timer.start()
 
