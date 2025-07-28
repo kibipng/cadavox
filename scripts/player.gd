@@ -27,8 +27,8 @@ var packet_read_limit: int = 5
 var speed 
 const WALK_SPEED = 5.0
 const SPRINT_SPEED = 8.0
-const JUMP_VELOCITY = 9.0
-const GRAVITY = 19
+const JUMP_VELOCITY = 9.0 #4.5
+const GRAVITY = 19 #9.8
 const SENSITIVITY = 0.015
 
 #bob variables
@@ -37,7 +37,7 @@ const BOB_AMP = 0.08
 var t_bob = 0.0
 
 #fov variables
-const BASE_FOV = 75.0
+const BASE_FOV = 75.0 #75
 const FOV_CHANGE = 1.5
 
 @export var spawn_text = [["pp",Vector3(0,0,0)]]
@@ -53,9 +53,6 @@ var fall_start_y: float = 0.0
 var is_falling: bool = false
 const FALL_DAMAGE_THRESHOLD: float = 10.0
 const FALL_DAMAGE_MULTIPLIER: float = 2.0
-
-# Word gun system
-var word_gun_system: Node
 
 func _ready() -> void:
 	main=get_node("/root/Main/")
@@ -87,11 +84,6 @@ func _ready() -> void:
 	challenge_manager = get_tree().get_first_node_in_group("challenge_manager")
 	player_stats_manager = get_tree().get_first_node_in_group("player_stats")
 	
-	# Initialize word gun system
-	word_gun_system = preload("res://scripts/word_gun.gd").new()
-	add_child(word_gun_system)
-	word_gun_system.name = "WordGunSystem"
-	
 	# Initialize player stats
 	if player_stats_manager and is_multiplayer_authority():
 		player_stats_manager.initialize_player(steam_id)
@@ -107,15 +99,18 @@ func _ready() -> void:
 func _on_player_died(died_steam_id: int):
 	if died_steam_id == steam_id:
 		is_dead = true
+		# Disable movement and hide player
 		set_physics_process(false)
 		visible = false
 
 func _on_player_revived(revived_steam_id: int):
 	if revived_steam_id == steam_id:
 		is_dead = false
+		# Re-enable movement and show player
 		set_physics_process(true)
 		visible = true
 
+# Method called by main scene to set terrain seed
 func set_terrain_seed(terrain_seed: int):
 	seed = terrain_seed
 	if voxel_terrain:
@@ -164,12 +159,14 @@ func _physics_process(delta: float) -> void:
 	
 	move_and_slide()
 	
-	# FALL DAMAGE CHECK
-	handle_fall_damage()
+	# FALL DAMAGE CHECK - AFTER move_and_slide()
+	handle_fall_damage(delta)
 
-func handle_fall_damage():
+func handle_fall_damage(delta):
+	# Simple logic: if we're on the ground and weren't falling, we're safe
 	if is_on_floor():
 		if is_falling:
+			# We just landed!
 			var fall_distance = fall_start_y - global_position.y
 			print(">>> LANDED! Fell ", fall_distance, " meters")
 			
@@ -180,54 +177,61 @@ func handle_fall_damage():
 				if player_stats_manager:
 					player_stats_manager.damage_player(steam_id, damage)
 				
-				add_fall_damage_effect(damage)
+				add_fall_damage_effect(damage,delta)
+			else:
+				print(">>> Safe landing")
 			
+			# Reset
 			is_falling = false
 			fall_start_y = 0.0
 	else:
-		if not is_falling and velocity.y < -2.0:
+		# We're in the air
+		if not is_falling and velocity.y < -2.0:  # Only start tracking if falling fast enough
+			# Start tracking the fall
 			is_falling = true
 			fall_start_y = global_position.y
 			print(">>> Started falling from ", fall_start_y)
 
-func add_fall_damage_effect(damage: int):
+# Also add this debug version of add_fall_damage_effect:
+func add_fall_damage_effect(damage: int,delta):
 	print("OUCH! Took ", damage, " fall damage!")
 	
+	# Much more noticeable camera shake
 	var original_pos = camera_3d.transform.origin
-	var shake_strength = min(damage * 0.02, 0.3)
-	var shake_duration = min(damage * 0.05, 1.0)
-	var shake_frequency = 0.03
+	var shake_strength = min(damage * 0.01, 0.3)  # Stronger shake, capped at 0.3
+	var shake_duration = min(damage * 0.05, 1.0)  # Longer shake for more damage
+	var shake_frequency = 0.01  # Faster shaking
 	
+	print(">>> Screen shake - strength: ", shake_strength, " duration: ", shake_duration)
+	
+	# Create a more intense shake effect
 	var shake_timer = 0.0
 	while shake_timer < shake_duration:
+		# Random shake in all directions
 		var shake_offset = Vector3(
 			randf_range(-shake_strength, shake_strength),
 			randf_range(-shake_strength, shake_strength),
-			randf_range(-shake_strength * 0.5, shake_strength * 0.5)
+			randf_range(-shake_strength * 0.5, shake_strength * 0.5)  # Less Z-axis shake
 		)
 		
-		camera_3d.transform.origin = original_pos + shake_offset
+		camera_3d.transform.origin = original_pos + shake_offset #lerp(camera_3d.transform.origin, original_pos + shake_offset,delta*20)
 		
 		await get_tree().create_timer(shake_frequency).timeout
 		shake_timer += shake_frequency
+		
+		# Gradually reduce shake intensity
 		shake_strength *= 0.95
 	
+	# Reset camera position smoothly
 	camera_3d.transform.origin = original_pos
+	print(">>> Screen shake complete")
+
 
 func _headbob(time) -> Vector3:
 	var pos = Vector3.ZERO
 	pos.y = sin(time * BOB_FREQ) * BOB_AMP
 	pos.x = cos(time * BOB_FREQ/2) * BOB_AMP
 	return pos
-
-# WORD GUN FUNCTIONS
-func enable_word_gun_mode():
-	if word_gun_system:
-		word_gun_system.enable_word_gun_mode()
-
-func load_word_gun_ammo(word: String):
-	if word_gun_system:
-		word_gun_system.load_word_ammo(word)
 
 func process_voice_data(voice_data:Dictionary, voice_source:String) -> void:
 	get_sample_rate()
@@ -245,14 +249,17 @@ func process_voice_data(voice_data:Dictionary, voice_source:String) -> void:
 		
 		var frames_available = playback_to_use.get_frames_available()
 		
+		# Process in chunks of 2 bytes (16-bit samples)
 		for i in range(0, min(frames_available * 2, voice_buffer.size() - 1), 2):
 			if i + 1 >= voice_buffer.size():
 				break
 				
+			# Extract 16-bit sample from two bytes
 			var raw_value: int = voice_buffer[i] | (voice_buffer[i + 1] << 8)
 			raw_value = (raw_value + 32768) & 0xffff
 			var amplitude: float = float(raw_value - 32768) / 32768.0
 			
+			# Push frame to audio buffer
 			playback_to_use.push_frame(Vector2(amplitude, amplitude))
 
 func _input(event: InputEvent) -> void:
@@ -271,29 +278,6 @@ func _input(event: InputEvent) -> void:
 		record_voice(true)
 	elif Input.is_action_just_released("voice_record"):
 		record_voice(false)
-	
-	# WORD GUN CONTROLS
-	if Input.is_action_just_pressed("fire") and word_gun_system:  # Left click
-		word_gun_system.fire_word_gun()
-	
-	if Input.is_action_just_pressed("toggle_word_gun"):  # G key
-		var inventory = get_tree().get_first_node_in_group("inventory_system")
-		if inventory and inventory.has_item(steam_id, "word_gun"):
-			if word_gun_system.word_gun_active:
-				word_gun_system.disable_word_gun_mode()
-			else:
-				word_gun_system.enable_word_gun_mode()
-	
-	# INVENTORY CONTROLS
-	if Input.is_action_just_pressed("use_item"):  # 1 key
-		var inventory = get_tree().get_first_node_in_group("inventory_system")
-		if inventory:
-			inventory.use_item(steam_id)
-	
-	if Input.is_action_just_pressed("drop_item"):  # Q key
-		var inventory = get_tree().get_first_node_in_group("inventory_system")
-		if inventory:
-			inventory.drop_item(steam_id)
 
 func _process(delta: float) -> void:
 	if is_multiplayer_authority() and !is_dead:
@@ -328,12 +312,19 @@ func get_sample_rate(is_toggled:bool = true) -> void:
 	prox_network.stream.mix_rate = current_sample_rate
 	prox_local.stream.mix_rate = current_sample_rate
 
+# Optional: Add this function if you want to connect the player hitbox signal
 func _on_player_hitbox_body_entered(body: Node3D) -> void:
+	# Only process hits for our own player (multiplayer authority)
 	if not is_multiplayer_authority():
 		return
 	
+	# Check if it's a falling word that hit us
 	if body.is_in_group("text_characters") or body.has_method("safe_free"):
+		# Get player stats manager
 		var player_stats = get_tree().get_first_node_in_group("player_stats")
 		if player_stats:
+			# Deal 20 damage to this player
 			player_stats.damage_player(steam_id, 20)
 			print("Player ", steam_id, " hit by word for 20 damage!")
+		
+		# The word will handle its own cleanup in text_character.gd

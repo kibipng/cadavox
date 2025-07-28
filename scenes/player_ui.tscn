@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://blwkjk5h8di37"]
+[gd_scene load_steps=3 format=3 uid="uid://blwkjk5h8di37"]
 
 [ext_resource type="Texture2D" uid="uid://dj132rju2lxfx" path="res://29a3817827bc4616d12b6db749bba308-1.jpg" id="1_jkj6h"]
 [ext_resource type="Script" uid="uid://dgt4n02biv1hw" path="res://scripts/player_ui.gd" id="1_sk4pr"]
-[ext_resource type="PackedScene" uid="uid://5kjw0sv3hlk1" path="res://scenes/inventory_ui.tscn" id="2_48xfa"]
 
 [node name="PlayerUI" type="Control"]
 layout_mode = 3
@@ -37,9 +36,6 @@ text = "Health"
 [node name="CoinsLabel" type="Label" parent="StatsPanel/VBoxContainer"]
 layout_mode = 2
 text = "Coins: 12832"
-
-[node name="InventoryUI" parent="." instance=ExtResource("2_48xfa")]
-layout_mode = 1
 
 [node name="DeathScreen" type="Control" parent="."]
 layout_mode = 1
